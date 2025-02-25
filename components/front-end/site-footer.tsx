@@ -15,7 +15,7 @@ export default function SiteFooter() {
   }
 
   return (
-    <footer className="bg-black text-white py-12 w-full mt-20">
+    <footer className="bg-black text-white py-4 w-full">
       <div className="flex flex-col space-y-2  text-sm opacity-70 text-center font-instrument-serif">
         <span>
           {' '}

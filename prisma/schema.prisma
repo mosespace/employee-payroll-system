@@ -1,0 +1,280 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+  MANAGER
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  PROBATION
+  SUSPENDED
+  TERMINATED
+  ON_LEAVE
+}
+
+enum PaymentFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  STRIPE
+  MOBILE_MONEY
+  CHECK
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  MATERNITY
+  PATERNITY
+  BEREAVEMENT
+  UNPAID
+  OTHER
+}
+
+model User {
+  id                   String           @id @default(cuid())
+  name                 String
+  email                String           @unique
+  emailVerified        DateTime?
+  image                String?
+  isMachine            Boolean          @default(false)
+  passwordHash         String?
+  invalidLoginAttempts Int              @default(0)
+  role                 UserRole         @default(EMPLOYEE)
+  
+  // Employee Info
+  employeeId           String?          @unique
+  department           String?
+  position             String?
+  hireDate             DateTime?
+  employmentStatus     EmploymentStatus? @default(ACTIVE)
+  manager              User?            @relation("EmployeeManager", fields: [managerId], references: [id])
+  managerId            String?
+  managedEmployees     User[]           @relation("EmployeeManager")
+  
+  // Compensation
+  baseSalary           Float?
+  paymentFrequency     PaymentFrequency? @default(MONTHLY)
+  preferredPaymentMethod PaymentMethod?  @default(BANK_TRANSFER)
+  bankAccountDetails   Json?
+  mobileMoneyDetails   Json?
+  
+  // Performance
+  points               Int              @default(0)
+  averageWorkHours     Float?           @default(0)
+  projectsCompleted    Int              @default(0)
+  
+  // System
+  lockedAt             DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt()
+  isCampusModerator    Boolean?         @default(false)
+  
+  // Relations
+  accounts             Account[]
+  sessions             Session[]
+  activityLogs         ActivityLog[]    @relation("UserActivityLog")
+  paymentRecords       PaymentRecord[]  @relation("EmployeePayments")
+  bonuses              Bonus[]          @relation("EmployeeBonuses")
+  suspensions          Suspension[]     @relation("EmployeeSuspensions")
+  leaves               Leave[]          @relation("EmployeeLeaves")
+  attendanceRecords    Attendance[]     @relation("EmployeeAttendance")
+  performanceReviews   PerformanceReview[] @relation("EmployeePerformance")
+  createdReviews       PerformanceReview[] @relation("ReviewCreator")
+  createdPayments      PaymentRecord[]  @relation("PaymentCreator")
+  createdBonuses       Bonus[]          @relation("BonusCreator")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String   
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  user User @relation("UserActivityLog", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                       String   @id @default(cuid())
+  userId                   String    
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  refresh_token_expires_in Int?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  createdAt                DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String    
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// New models for employee management system
+
+model PaymentRecord {
+  id              String         @id @default(cuid())
+  employeeId      String
+  amount          Float
+  paymentMethod   PaymentMethod
+  paymentDate     DateTime
+  payPeriodStart  DateTime
+  payPeriodEnd    DateTime
+  description     String?
+  transactionId   String?
+  status          String         @default("PENDING") // PENDING, COMPLETED, FAILED
+  taxDeductions   Float?
+  benefits        Float?
+  otherDeductions Float?
+  netAmount       Float
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt()
+  createdById     String
+
+  // Relations
+  employee        User           @relation("EmployeePayments", fields: [employeeId], references: [id])
+  createdBy       User           @relation("PaymentCreator", fields: [createdById], references: [id])
+}
+
+model Bonus {
+  id          String   @id @default(cuid())
+  employeeId  String
+  amount      Float
+  reason      String
+  date        DateTime
+  createdAt   DateTime @default(now())
+  createdById String
+
+  // Relations
+  employee    User     @relation("EmployeeBonuses", fields: [employeeId], references: [id])
+  createdBy   User     @relation("BonusCreator", fields: [createdById], references: [id])
+}
+
+model Suspension {
+  id          String    @id @default(cuid())
+  employeeId  String
+  startDate   DateTime
+  endDate     DateTime?
+  reason      String
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  employee    User      @relation("EmployeeSuspensions", fields: [employeeId], references: [id])
+}
+
+model Leave {
+  id          String    @id @default(cuid())
+  employeeId  String
+  leaveType   LeaveType
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy  String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+
+  // Relations
+  employee    User      @relation("EmployeeLeaves", fields: [employeeId], references: [id])
+}
+
+model Attendance {
+  id            String   @id @default(cuid())
+  employeeId    String
+  checkInTime   DateTime
+  checkOutTime  DateTime?
+  totalHours    Float?
+  date          DateTime @default(now())
+  notes         String?
+
+  // Relations
+  employee      User     @relation("EmployeeAttendance", fields: [employeeId], references: [id])
+}
+
+model PerformanceReview {
+  id                String   @id @default(cuid())
+  employeeId        String
+  reviewerId        String
+  reviewDate        DateTime
+  performanceScore  Float    // e.g., 1-5 scale
+  projectsCompleted Int?
+  attendanceScore   Float?
+  workQualityScore  Float?
+  teamworkScore     Float?
+  comments          String?
+  goals             Json?
+  period            String?  // e.g., "Q1 2023"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt()
+
+  // Relations
+  employee          User     @relation("EmployeePerformance", fields: [employeeId], references: [id])
+  reviewer          User     @relation("ReviewCreator", fields: [reviewerId], references: [id])
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    @default("ONGOING") // ONGOING, COMPLETED, CANCELLED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+}

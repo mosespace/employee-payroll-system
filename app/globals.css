@@ -11,107 +11,81 @@
 body {
   font-family: var(--app-font) !important;
 }
-
+/* Color Used: #226F54 */
 @layer base {
   :root {
     --background: 0 0% 100%;
+    --foreground: 157.5 57.14% 2.75%;
 
-    --foreground: 0 0% 3.9%;
+    --primary: 158.96 53.1% 28.43%;
+    --primary-foreground: 157.5 22.22% 92.94%;
 
-    --card: 0 0% 100%;
-
-    --card-foreground: 0 0% 3.9%;
+    --card: 150 22.22% 96.47%;
+    --card-foreground: 157.5 57.14% 2.75%;
 
     --popover: 0 0% 100%;
+    --popover-foreground: 157.5 57.14% 2.75%;
 
-    --popover-foreground: 0 0% 3.9%;
+    --secondary: 158.18 20% 89.22%;
+    --secondary-foreground: 0 0% 0%;
 
-    --primary: 0 0% 9%;
+    --muted: 157.5 22.22% 92.94%;
+    --muted-foreground: 0 0% 40%;
 
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 96.1%;
-
-    --secondary-foreground: 0 0% 9%;
-
-    --muted: 0 0% 96.1%;
-
-    --muted-foreground: 0 0% 45.1%;
-
-    --accent: 0 0% 96.1%;
-
-    --accent-foreground: 0 0% 9%;
+    --accent: 157.5 22.22% 92.94%;
+    --accent-foreground: 160 54.55% 4.31%;
 
     --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --destructive-foreground: 0 0% 98%;
+    --border: 160 20.55% 85.69%;
+    --input: 160 8.26% 78.63%;
+    --ring: 158.96 53.1% 28.43%;
 
-    --border: 0 0% 89.8%;
-
-    --input: 0 0% 89.8%;
-
-    --ring: 0 0% 3.9%;
-
-    --chart-1: 12 76% 61%;
-
-    --chart-2: 173 58% 39%;
-
-    --chart-3: 197 37% 24%;
-
-    --chart-4: 43 74% 66%;
-
-    --chart-5: 27 87% 67%;
+    --chart-1: 158.96 53.1% 28.43%;
+    --chart-2: 159.09 33% 39.22%;
+    --chart-3: 159.6 21.01% 53.33%;
+    --chart-4: 159.07 21.39% 60.59%;
+    --chart-5: 158.82 20.73% 67.84%;
 
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 0 0% 0%;
+    --foreground: 158.18 20% 89.22%;
 
-    --foreground: 0 0% 98%;
+    --primary: 158.96 53.1% 28.43%;
+    --primary-foreground: 157.5 22.22% 92.94%;
 
-    --card: 0 0% 3.9%;
+    --card: 160 12% 4.9%;
+    --card-foreground: 158.18 20% 89.22%;
 
-    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 158.18 20% 89.22%;
 
-    --popover: 0 0% 3.9%;
+    --secondary: 157.78 52.94% 10%;
+    --secondary-foreground: 0 0% 100%;
 
-    --popover-foreground: 0 0% 98%;
+    --muted: 0 0% 9.8%;
+    --muted-foreground: 0 0% 50.2%;
 
-    --primary: 0 0% 98%;
+    --accent: 157.78 52.94% 10%;
+    --accent-foreground: 158.18 20% 89.22%;
 
-    --primary-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 14.9%;
+    --border: 160 51.72% 5.69%;
+    --input: 162.86 7.69% 17.84%;
+    --ring: 158.96 53.1% 28.43%;
 
-    --secondary-foreground: 0 0% 98%;
+    --chart-1: 158.96 53.1% 28.43%;
+    --chart-2: 158.77 52.85% 24.12%;
+    --chart-3: 159.6 53.19% 18.43%;
+    --chart-4: 158.57 52.5% 15.69%;
+    --chart-5: 159.43 53.85% 12.75%;
 
-    --muted: 0 0% 14.9%;
-
-    --muted-foreground: 0 0% 63.9%;
-
-    --accent: 0 0% 14.9%;
-
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 14.9%;
-
-    --input: 0 0% 14.9%;
-
-    --ring: 0 0% 83.1%;
-
-    --chart-1: 220 70% 50%;
-
-    --chart-2: 160 60% 45%;
-
-    --chart-3: 30 80% 55%;
-
-    --chart-4: 280 65% 60%;
-
-    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
   }
 }
 
@@ -121,5 +95,143 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Loader */
+.spinner {
+  font-size: 28px;
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+.spinner.center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}
+
+.spinner .spinner-blade {
+  position: absolute;
+  left: 0.4629em;
+  bottom: 0;
+  width: 0.074em;
+  height: 0.2777em;
+  border-radius: 0.0555em;
+  background-color: transparent;
+  -webkit-transform-origin: center -0.2222em;
+  -ms-transform-origin: center -0.2222em;
+  transform-origin: center -0.2222em;
+  animation: spinner-fade9234 1s infinite linear;
+}
+
+.spinner .spinner-blade:nth-child(1) {
+  -webkit-animation-delay: 0s;
+  animation-delay: 0s;
+  -webkit-transform: rotate(0deg);
+  -ms-transform: rotate(0deg);
+  transform: rotate(0deg);
+}
+
+.spinner .spinner-blade:nth-child(2) {
+  -webkit-animation-delay: 0.083s;
+  animation-delay: 0.083s;
+  -webkit-transform: rotate(30deg);
+  -ms-transform: rotate(30deg);
+  transform: rotate(30deg);
+}
+
+.spinner .spinner-blade:nth-child(3) {
+  -webkit-animation-delay: 0.166s;
+  animation-delay: 0.166s;
+  -webkit-transform: rotate(60deg);
+  -ms-transform: rotate(60deg);
+  transform: rotate(60deg);
+}
+
+.spinner .spinner-blade:nth-child(4) {
+  -webkit-animation-delay: 0.249s;
+  animation-delay: 0.249s;
+  -webkit-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+.spinner .spinner-blade:nth-child(5) {
+  -webkit-animation-delay: 0.332s;
+  animation-delay: 0.332s;
+  -webkit-transform: rotate(120deg);
+  -ms-transform: rotate(120deg);
+  transform: rotate(120deg);
+}
+
+.spinner .spinner-blade:nth-child(6) {
+  -webkit-animation-delay: 0.415s;
+  animation-delay: 0.415s;
+  -webkit-transform: rotate(150deg);
+  -ms-transform: rotate(150deg);
+  transform: rotate(150deg);
+}
+
+.spinner .spinner-blade:nth-child(7) {
+  -webkit-animation-delay: 0.498s;
+  animation-delay: 0.498s;
+  -webkit-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+.spinner .spinner-blade:nth-child(8) {
+  -webkit-animation-delay: 0.581s;
+  animation-delay: 0.581s;
+  -webkit-transform: rotate(210deg);
+  -ms-transform: rotate(210deg);
+  transform: rotate(210deg);
+}
+
+.spinner .spinner-blade:nth-child(9) {
+  -webkit-animation-delay: 0.664s;
+  animation-delay: 0.664s;
+  -webkit-transform: rotate(240deg);
+  -ms-transform: rotate(240deg);
+  transform: rotate(240deg);
+}
+
+.spinner .spinner-blade:nth-child(10) {
+  -webkit-animation-delay: 0.747s;
+  animation-delay: 0.747s;
+  -webkit-transform: rotate(270deg);
+  -ms-transform: rotate(270deg);
+  transform: rotate(270deg);
+}
+
+.spinner .spinner-blade:nth-child(11) {
+  -webkit-animation-delay: 0.83s;
+  animation-delay: 0.83s;
+  -webkit-transform: rotate(300deg);
+  -ms-transform: rotate(300deg);
+  transform: rotate(300deg);
+}
+
+.spinner .spinner-blade:nth-child(12) {
+  -webkit-animation-delay: 0.913s;
+  animation-delay: 0.913s;
+  -webkit-transform: rotate(330deg);
+  -ms-transform: rotate(330deg);
+  transform: rotate(330deg);
+}
+
+@keyframes spinner-fade9234 {
+  0% {
+    background-color: #69717d;
+  }
+
+  100% {
+    background-color: transparent;
   }
 }
