@@ -13,6 +13,7 @@ type TextInputProps = {
   page?: string;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 };
 
 export default function CustomText({
@@ -22,6 +23,7 @@ export default function CustomText({
   errors,
   type = 'text',
   placeholder,
+  disabled = false,
   page,
   className = 'col-span-full text-white',
 }: TextInputProps) {
@@ -47,6 +49,7 @@ export default function CustomText({
       )}
 
       <Input
+        disabled={disabled}
         {...register(`${name}`, { required: true })}
         id={`${name}`}
         name={`${name}`}

@@ -7,6 +7,7 @@ type TextAreaProps = {
   label: string;
   name: string;
   helperText?: string;
+  disabled?: boolean;
   height?: number; // Add new height prop
 };
 
@@ -15,6 +16,7 @@ export default function CustomTextArea({
   errors,
   label,
   name,
+  disabled = false,
   helperText = '',
   height = 3, // Default height of 3 rows
 }: TextAreaProps) {
@@ -28,6 +30,7 @@ export default function CustomTextArea({
       </label>
       <div className="mt-2">
         <Textarea
+          disabled={disabled}
           id={name}
           {...register(`${name}`, { required: true })}
           rows={height} // Use the height prop here

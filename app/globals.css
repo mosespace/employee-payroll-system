@@ -49,6 +49,22 @@ body {
     --chart-5: 158.82 20.73% 67.84%;
 
     --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
     --background: 0 0% 0%;
@@ -86,6 +102,22 @@ body {
     --chart-5: 159.43 53.85% 12.75%;
 
     --radius: 0.5rem;
+
+    --sidebar-background: 240 5.9% 10%;
+
+    --sidebar-foreground: 240 4.8% 95.9%;
+
+    --sidebar-primary: 224.3 76.3% 48%;
+
+    --sidebar-primary-foreground: 0 0% 100%;
+
+    --sidebar-accent: 240 3.7% 15.9%;
+
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+
+    --sidebar-border: 240 3.7% 15.9%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -234,4 +266,75 @@ body {
   100% {
     background-color: transparent;
   }
+}
+
+/* Custom styles for the table */
+.table {
+  @apply w-full text-sm;
+}
+
+.table thead tr:first-child th {
+  @apply text-center font-semibold py-4;
+}
+
+.table thead tr:last-child th {
+  @apply border-b;
+}
+
+/* Column group colors */
+.table th[data-column-group='Earnings'],
+.table td[data-column-group='Earnings'] {
+  @apply bg-[#e3f2fd]/40;
+}
+
+.table th[data-column-group='Reimbursement'],
+.table td[data-column-group='Reimbursement'] {
+  @apply bg-[#f3e5f5]/40;
+}
+
+.table th[data-column-group='Addition'],
+.table td[data-column-group='Addition'] {
+  @apply bg-[#fff3e0]/40;
+}
+
+/* Row states */
+.table tbody tr:hover {
+  @apply bg-gray-50;
+}
+
+.table tbody tr[data-state='selected'] {
+  @apply bg-blue-50;
+}
+
+.table tbody tr[data-state='selected']:hover {
+  @apply bg-blue-100;
+}
+
+.table tbody tr[data-state='selected'] td {
+  @apply bg-opacity-50;
+}
+
+/* Cell spacing */
+.table td {
+  @apply py-3;
+}
+
+/* Edit mode inputs */
+.table input {
+  @apply bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500;
+}
+
+/* Ensure header colors are more prominent than cell colors */
+.table thead th {
+  @apply bg-opacity-100;
+}
+
+/* Ensure selected state shows through column colors */
+.table tbody tr[data-state='selected'] td {
+  @apply relative;
+}
+
+.table tbody tr[data-state='selected'] td::after {
+  content: '';
+  @apply absolute inset-0 bg-blue-50 opacity-50 pointer-events-none;
 }

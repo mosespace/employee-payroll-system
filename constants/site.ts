@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: 'Trek Bus',
+  name: 'EPMS System',
   description:
     'Efficiently manage employees, track projects, and boost productivity with our comprehensive project management solution.',
   logo: '/logo.svg',

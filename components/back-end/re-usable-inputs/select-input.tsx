@@ -9,14 +9,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Campus, Category } from '@prisma/client';
+// import { Campus, Category } from '@prisma/client';
 import { PlusCircle } from 'lucide-react';
 import { useMemo } from 'react';
 import Select from 'react-tailwindcss-select';
 import { Option, Options } from 'react-tailwindcss-select/dist/components/type';
-import CampusForm from '../forms/campus-form';
-import CategoryForm from '../forms/category-form';
-import CourseForm from '../forms/course-form';
+// import CampusForm from '../forms/campus-form';
+// import CategoryForm from '../forms/category-form';
+// import CourseForm from '../forms/course-form';
 import { cn } from '@/lib/utils';
 
 type FormSelectInputProps = {
@@ -29,8 +29,8 @@ type FormSelectInputProps = {
   isMultiple?: boolean;
   isSearchable?: boolean;
   toolTipText?: string;
-  categories?: Category[] | null;
-  campuses?: Campus[] | null;
+  // categories?: Category[] | null;
+  // campuses?: Campus[] | null;
   isDialogOpen?: boolean;
   className?: string;
   onDialogOpenChange?: (open: boolean) => void;
@@ -46,8 +46,8 @@ export default function FormSelectInput({
   labelShown = true,
   isSearchable = true,
   isMultiple = false,
-  categories,
-  campuses,
+  // categories,
+  // campuses,
   isDialogOpen,
   className = '',
   onDialogOpenChange,
@@ -94,16 +94,17 @@ export default function FormSelectInput({
   const renderForm = () => {
     switch (model) {
       case 'campus':
-        return <CampusForm />;
+      // return <CampusForm />;
       case 'category':
-        return <CategoryForm />;
+      // return <CategoryForm />;
       case 'course':
         return (
-          <CourseForm
-            categories={categories}
-            campuses={campuses}
-            onSuccess={() => onDialogOpenChange?.(false)}
-          />
+          // <CourseForm
+          //   categories={categories}
+          //   campuses={campuses}
+          //   onSuccess={() => onDialogOpenChange?.(false)}
+          // />
+          <></>
         );
       default:
         return null;

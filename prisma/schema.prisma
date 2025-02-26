@@ -24,6 +24,35 @@ enum EmploymentStatus {
   ON_LEAVE
 }
 
+enum EmploymentType {
+  HYBRID
+  FULL_TIME
+  REMOTE
+  ON_SITE
+  CONTRACT
+  PART_TIME
+  INTERNSHIP
+  TEMPORARY
+  FREELANCE
+  VOLUNTEER
+  OTHER
+}
+
+enum EmploymentDepartment {
+  HR
+  MARKETING
+  SALES
+  ENGINEERING
+  DESIGN
+  FINANCE
+  LEGAL
+  CUSTOMER_SUPPORT
+  PRODUCT
+  OPERATIONS
+  IT
+  OTHER
+}
+
 enum PaymentFrequency {
   WEEKLY
   BIWEEKLY
@@ -48,63 +77,149 @@ enum LeaveType {
   OTHER
 }
 
+model BankDetails {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  bankName      String
+  accountNumber String
+  accountName   String
+  branchName    String?
+  accountType   String?
+  swiftCode     String?
+  ibanNumber    String?
+  routingNumber String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relation to User
+  user User @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model StatutoryDetails {
+  id           String   @id @default(cuid())
+  employeeId   String   @unique
+  panNumber    String
+  uanNumber    String
+  adhaarNumber String
+  pfNumber     String?
+  esiNumber    String?
+  taxId        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relation to User
+  user User @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model CompensationDetails {
+  id                 String           @id @default(cuid())
+  employeeId         String           @unique
+  baseSalary         String
+  housingAllowance   Float?
+  TransportAllowance Float?
+  MealAllowance      Float?
+  otherAllowances    Float?
+  paymentFrequency   PaymentFrequency @default(MONTHLY)
+  // deductions
+  taxDeduction       Float?
+  insuranceDeduction Float?
+  pensionDeduction   Float?
+  otherDeduction     Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to User
+  user User @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
 model User {
-  id                   String           @id @default(cuid())
+  id                   String    @id @default(cuid())
   name                 String
-  email                String           @unique
+  email                String    @unique
   emailVerified        DateTime?
   image                String?
-  isMachine            Boolean          @default(false)
+  isMachine            Boolean   @default(false)
   passwordHash         String?
-  invalidLoginAttempts Int              @default(0)
-  role                 UserRole         @default(EMPLOYEE)
-  
+  invalidLoginAttempts Int       @default(0)
+  role                 UserRole  @default(EMPLOYEE)
+
   // Employee Info
-  employeeId           String?          @unique
-  department           String?
+  employeeId       String?   @unique
+  location         String?
+  nationality      String?
+  gender           String?
+  maritalStatus    String?
+  streetAddress    String?
+  city             String?
+  state            String?
+  region           String?
+  country          String?
+  postCode         String?
+  personalEmail    String?
+  phoneNumber      String?
+  responsibilities String?
+  notes            String?
+  mobileNo         String?
+  hireDate         DateTime?
+  dateOfBirth      DateTime?
+  bloodGroup       DateTime?
+  wef              DateTime?
+  changeReason     String?
+
+  // current employment details
   position             String?
-  hireDate             DateTime?
-  employmentStatus     EmploymentStatus? @default(ACTIVE)
-  manager              User?            @relation("EmployeeManager", fields: [managerId], references: [id])
-  managerId            String?
-  managedEmployees     User[]           @relation("EmployeeManager")
-  
+  department           String?
+  reportingManagerId   String?
+  checkInTime          DateTime?
+  checkOutTime         DateTime?
+  daysPerWeek          Int?
+  probationPeriod      Int?
+  contractDuration     Int?
+  employmentType       EmploymentType?       @default(ON_SITE)
+  employmentDepartment EmploymentDepartment? @default(OTHER)
+  employmentStatus     EmploymentStatus?     @default(ACTIVE)
+  manager              User?                 @relation("EmployeeManager", fields: [reportingManagerId], references: [id])
+  managedEmployees     User[]                @relation("EmployeeManager")
+
   // Compensation
-  baseSalary           Float?
-  paymentFrequency     PaymentFrequency? @default(MONTHLY)
-  preferredPaymentMethod PaymentMethod?  @default(BANK_TRANSFER)
-  bankAccountDetails   Json?
-  mobileMoneyDetails   Json?
-  
+  baseSalary             Float?
+  paymentFrequency       PaymentFrequency?    @default(MONTHLY)
+  preferredPaymentMethod PaymentMethod?       @default(BANK_TRANSFER)
+  mobileMoneyDetails     Json?
+  bankDetails            BankDetails?
+  statutory              StatutoryDetails?
+  Compensation           CompensationDetails?
+
   // Performance
-  points               Int              @default(0)
-  averageWorkHours     Float?           @default(0)
-  projectsCompleted    Int              @default(0)
-  
+  points            Int    @default(0)
+  averageWorkHours  Float? @default(0)
+  projectsCompleted Int    @default(0)
+
   // System
-  lockedAt             DateTime?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt()
-  isCampusModerator    Boolean?         @default(false)
-  
+  lockedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt()
+  isCampusModerator Boolean?  @default(false)
+
   // Relations
-  accounts             Account[]
-  sessions             Session[]
-  activityLogs         ActivityLog[]    @relation("UserActivityLog")
-  paymentRecords       PaymentRecord[]  @relation("EmployeePayments")
-  bonuses              Bonus[]          @relation("EmployeeBonuses")
-  suspensions          Suspension[]     @relation("EmployeeSuspensions")
-  leaves               Leave[]          @relation("EmployeeLeaves")
-  attendanceRecords    Attendance[]     @relation("EmployeeAttendance")
-  performanceReviews   PerformanceReview[] @relation("EmployeePerformance")
-  createdReviews       PerformanceReview[] @relation("ReviewCreator")
-  createdPayments      PaymentRecord[]  @relation("PaymentCreator")
-  createdBonuses       Bonus[]          @relation("BonusCreator")
+  accounts           Account[]
+  sessions           Session[]
+  activityLogs       ActivityLog[]       @relation("UserActivityLog")
+  paymentRecords     PaymentRecord[]     @relation("EmployeePayments")
+  bonuses            Bonus[]             @relation("EmployeeBonuses")
+  suspensions        Suspension[]        @relation("EmployeeSuspensions")
+  leaves             Leave[]             @relation("EmployeeLeaves")
+  attendanceRecords  Attendance[]        @relation("EmployeeAttendance")
+  performanceReviews PerformanceReview[] @relation("EmployeePerformance")
+  createdReviews     PerformanceReview[] @relation("ReviewCreator")
+  createdPayments    PaymentRecord[]     @relation("PaymentCreator")
+  createdBonuses     Bonus[]             @relation("BonusCreator")
 }
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  userId    String   
+  userId    String
   action    String
   details   Json?
   createdAt DateTime @default(now())
@@ -114,7 +229,7 @@ model ActivityLog {
 
 model Account {
   id                       String   @id @default(cuid())
-  userId                   String    
+  userId                   String
   type                     String
   provider                 String
   providerAccountId        String
@@ -137,7 +252,7 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String    
+  userId       String
   expires      DateTime
   createdAt    DateTime @default(now())
 
@@ -159,7 +274,7 @@ model VerificationToken {
 // New models for employee management system
 
 model PaymentRecord {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   employeeId      String
   amount          Float
   paymentMethod   PaymentMethod
@@ -168,18 +283,18 @@ model PaymentRecord {
   payPeriodEnd    DateTime
   description     String?
   transactionId   String?
-  status          String         @default("PENDING") // PENDING, COMPLETED, FAILED
+  status          String        @default("PENDING") // PENDING, COMPLETED, FAILED
   taxDeductions   Float?
   benefits        Float?
   otherDeductions Float?
   netAmount       Float
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt()
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt()
   createdById     String
 
   // Relations
-  employee        User           @relation("EmployeePayments", fields: [employeeId], references: [id])
-  createdBy       User           @relation("PaymentCreator", fields: [createdById], references: [id])
+  employee  User @relation("EmployeePayments", fields: [employeeId], references: [id])
+  createdBy User @relation("PaymentCreator", fields: [createdById], references: [id])
 }
 
 model Bonus {
@@ -192,51 +307,52 @@ model Bonus {
   createdById String
 
   // Relations
-  employee    User     @relation("EmployeeBonuses", fields: [employeeId], references: [id])
-  createdBy   User     @relation("BonusCreator", fields: [createdById], references: [id])
+  employee  User @relation("EmployeeBonuses", fields: [employeeId], references: [id])
+  createdBy User @relation("BonusCreator", fields: [createdById], references: [id])
 }
 
 model Suspension {
-  id          String    @id @default(cuid())
-  employeeId  String
-  startDate   DateTime
-  endDate     DateTime?
-  reason      String
-  notes       String?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  employeeId String
+  startDate  DateTime
+  endDate    DateTime?
+  reason     String
+  notes      String?
+  createdAt  DateTime  @default(now())
 
   // Relations
-  employee    User      @relation("EmployeeSuspensions", fields: [employeeId], references: [id])
+  employee User @relation("EmployeeSuspensions", fields: [employeeId], references: [id])
 }
 
 model Leave {
-  id          String    @id @default(cuid())
-  employeeId  String
-  leaveType   LeaveType
-  startDate   DateTime
-  endDate     DateTime
-  reason      String?
-  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  approvedBy  String?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt()
+  id           String    @id @default(cuid())
+  employeeId   String
+  leaveType    LeaveType
+  startDate    DateTime
+  endDate      DateTime
+  reason       String?
+  noticePeriod Int?
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy   String?
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt()
 
   // Relations
-  employee    User      @relation("EmployeeLeaves", fields: [employeeId], references: [id])
+  employee User @relation("EmployeeLeaves", fields: [employeeId], references: [id])
 }
 
 model Attendance {
-  id            String   @id @default(cuid())
-  employeeId    String
-  checkInTime   DateTime
-  checkOutTime  DateTime?
-  totalHours    Float?
-  date          DateTime @default(now())
-  notes         String?
+  id           String    @id @default(cuid())
+  employeeId   String
+  checkInTime  DateTime
+  checkOutTime DateTime?
+  totalHours   Float?
+  date         DateTime  @default(now())
+  notes        String?
 
   // Relations
-  employee      User     @relation("EmployeeAttendance", fields: [employeeId], references: [id])
+  employee User @relation("EmployeeAttendance", fields: [employeeId], references: [id])
 }
 
 model PerformanceReview {
@@ -244,28 +360,28 @@ model PerformanceReview {
   employeeId        String
   reviewerId        String
   reviewDate        DateTime
-  performanceScore  Float    // e.g., 1-5 scale
+  performanceScore  Float // e.g., 1-5 scale
   projectsCompleted Int?
   attendanceScore   Float?
   workQualityScore  Float?
   teamworkScore     Float?
   comments          String?
   goals             Json?
-  period            String?  // e.g., "Q1 2023"
+  period            String? // e.g., "Q1 2023"
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt()
 
   // Relations
-  employee          User     @relation("EmployeePerformance", fields: [employeeId], references: [id])
-  reviewer          User     @relation("ReviewCreator", fields: [reviewerId], references: [id])
+  employee User @relation("EmployeePerformance", fields: [employeeId], references: [id])
+  reviewer User @relation("ReviewCreator", fields: [reviewerId], references: [id])
 }
 
 model Department {
-  id          String    @id @default(cuid())
-  name        String    @unique
+  id          String   @id @default(cuid())
+  name        String   @unique
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt()
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
 }
 
 model Project {
