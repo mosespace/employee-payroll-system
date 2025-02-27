@@ -1,20 +1,26 @@
 'use client';
 
-import type { User } from '@prisma/client';
+import type { StatutoryDetails, User } from '@prisma/client';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 import CustomText from '@/components/back-end/re-usable-inputs/text-reusable';
 import { Button } from '@/components/ui/button';
+import { toast } from '@mosespace/toast';
+import { useState } from 'react';
+import { updateEmployee } from '@/actions/employees';
+import Submit from './submit';
 
 type FormValues = z.infer<any>;
 
 interface StatutoryDetailsProps {
   isEditing: boolean;
-  data: User;
+  data?: (User & { statutory: StatutoryDetails }) | null | undefined;
 }
 
 export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
+  const [loading, setLoading] = useState<boolean>(false);
+
   const {
     register,
     handleSubmit,
@@ -24,23 +30,43 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
   } = useForm<any>({
     // resolver: zodResolver(formSchema),
     defaultValues: {
-      ...data,
+      panNumber: data?.statutory?.panNumber,
+      uan: data?.statutory?.uanNumber,
+      aadhaarNumber: data?.statutory?.aadhaarNumber,
+      pfNumber: data?.statutory?.pfNumber,
+      esiNumber: data?.statutory?.esiNumber,
+      taxId: data?.statutory?.taxId,
     },
   });
 
   const employeeId = data?.id;
-  async function onSubmit(data: FormValues) {
+  async function onSubmit(formData: FormValues) {
+    // console.log('FormData ✅:', formData);
+
     try {
-      const response = await fetch(`/api/employees/${employeeId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      setLoading(true);
+      const dataToSubmit = {
+        statutory: {
+          ...formData,
+          // employeeId,
         },
-        body: JSON.stringify({ statutoryDetails: data }),
-      });
-      if (!response.ok) throw new Error('Failed to update');
+      };
+
+      console.log('Data to be sent:', dataToSubmit);
+      const result = await updateEmployee(dataToSubmit, employeeId as string);
+
+      // Handle the response
+      if (result.status === 200) {
+        // Success handling
+        toast.success('Success', 'Employee details updated successfully');
+      } else {
+        // Error handling
+        toast.error('Error updating employee:', result.message);
+      }
     } catch (error) {
-      console.error('Error updating statutory details:', error);
+      toast.error('Error', 'Failed to update employee details');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -53,7 +79,7 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
             register={register}
             name="panNumber"
             errors={errors}
-            type="number"
+            type="text"
             placeholder="Eg; 3074948611"
             disabled={!isEditing}
             className="w-full"
@@ -64,7 +90,7 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
             register={register}
             name="aadhaarNumber"
             errors={errors}
-            type="number"
+            type="text"
             placeholder="Eg; 30371648611"
             disabled={!isEditing}
             className="w-full"
@@ -75,7 +101,7 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
             register={register}
             name="uanNumber"
             errors={errors}
-            type="number"
+            type="text"
             placeholder="Eg; 84102947"
             disabled={!isEditing}
             className="w-full"
@@ -86,7 +112,7 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
             register={register}
             name="pfNumber"
             errors={errors}
-            type="number"
+            type="text"
             placeholder="Eg; 63736372"
             disabled={!isEditing}
             className="w-full"
@@ -112,14 +138,7 @@ export function StatutoryDetails({ isEditing, data }: StatutoryDetailsProps) {
             className="w-full"
           />
         </div>
-        {isEditing && (
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => reset()}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes</Button>
-          </div>
-        )}
+        {isEditing && <Submit loading={loading} />}
       </form>
     </div>
   );

@@ -6,96 +6,54 @@ import * as z from 'zod';
 import FormSelectInput from '@/components/back-end/re-usable-inputs/select-input';
 import CustomText from '@/components/back-end/re-usable-inputs/text-reusable';
 import { Button } from '@/components/ui/button';
-import { type User } from '@prisma/client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
+import type { CompensationDetails, User } from '@prisma/client';
+import { updateEmployee } from '@/actions/employees';
+import { toast } from '@mosespace/toast';
+import Submit from './submit';
+import Select from 'react-tailwindcss-select';
 
-const formSchema = z.object({
-  baseSalary: z.number().min(0, 'Base salary must be a positive number'),
-  paymentFrequency: z.enum(['WEEKLY', 'BIWEEKLY', 'MONTHLY', 'YEARLY']),
-  overtimeRate: z.number().min(0, 'Overtime rate must be a positive number'),
-  bonusEligibility: z.boolean(),
-  allowances: z.object({
-    housing: z.number().optional(),
-    transport: z.number().optional(),
-    meal: z.number().optional(),
-    other: z.number().optional(),
-  }),
-  deductions: z.object({
-    tax: z.number().optional(),
-    insurance: z.number().optional(),
-    pension: z.number().optional(),
-    other: z.number().optional(),
-  }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<any>;
 
 interface CompensationDetailsProps {
   isEditing: boolean;
-  data: User;
+  data?: (User & { compensation: CompensationDetails }) | null | undefined;
 }
 
 export function CompensationDetails({
   isEditing,
   data,
 }: CompensationDetailsProps) {
-  // const form = useForm<FormValues>({
-  //   resolver: zodResolver(formSchema),
-  //   defaultValues: {
-  //     baseSalary: 0,
-  //     overtimeRate: 0,
-  //     bonusEligibility: false,
-  //     allowances: {
-  //       housing: 0,
-  //       transport: 0,
-  //       meal: 0,
-  //       other: 0,
-  //     },
-  //     deductions: {
-  //       tax: 0,
-  //       insurance: 0,
-  //       pension: 0,
-  //       other: 0,
-  //     },
-  //   },
-  // });
-
   const [paymentFrequency, setPaymentFrequency] = useState<Option | Option[]>(
     [],
   );
 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [frequency, setFrequency] = useState<Option | null>(null);
+
   const {
     register,
     handleSubmit,
-    watch,
-    reset,
     formState: { errors },
   } = useForm<any>({
-    // resolver: zodResolver(formSchema),
     defaultValues: {
-      ...data,
+      baseSalary: data?.compensation?.baseSalary,
+      housingAllowance: data?.compensation?.housingAllowance,
+      transportAllowance: data?.compensation?.transportAllowance,
+      mealAllowance: data?.compensation?.mealAllowance,
+      otherAllowances: data?.compensation?.otherAllowances,
+      paymentFrequency: data?.compensation?.paymentFrequency,
+      taxDeduction: data?.compensation?.taxDeduction,
+      insuranceDeduction: data?.compensation?.insuranceDeduction,
+      pensionDeduction: data?.compensation?.pensionDeduction,
+      otherDeduction: data?.compensation?.otherDeduction,
     },
   });
 
   const employeeId = data?.id;
 
-  async function onSubmit(data: FormValues) {
-    try {
-      const response = await fetch(`/api/employees/${employeeId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ compensation: data }),
-      });
-      if (!response.ok) throw new Error('Failed to update');
-    } catch (error) {
-      console.error('Error updating compensation details:', error);
-    }
-  }
-
-  const frequency = [
+  const options = [
     {
       value: 'WEEKLY',
       label: 'Weekly',
@@ -114,6 +72,60 @@ export function CompensationDetails({
     },
   ];
 
+  // Initialize selections based on data when component mounts
+  useEffect(() => {
+    if (data) {
+      // Set frequency status
+      if (data.maritalStatus) {
+        const matchedType = options.find(
+          (opt) => opt.value === data?.compensation?.paymentFrequency,
+        );
+        if (matchedType) {
+          setFrequency(matchedType);
+        }
+      }
+    }
+  }, [data]);
+
+  async function onSubmit(formData: FormValues) {
+    // console.log('FormData ✅:', formData);
+
+    try {
+      setLoading(true);
+
+      const dataToSubmit = {
+        compensation: {
+          ...formData,
+          housingAllowance: parseFloat(formData.housingAllowance),
+          transportAllowance: parseFloat(formData.transportAllowance),
+          mealAllowance: parseFloat(formData.mealAllowance),
+          otherAllowances: parseFloat(formData.otherAllowances),
+          taxDeduction: parseFloat(formData.taxDeduction),
+          insuranceDeduction: parseFloat(formData.insuranceDeduction),
+          pensionDeduction: parseFloat(formData.pensionDeduction),
+          otherDeduction: parseFloat(formData.otherDeduction),
+          paymentFrequency: frequency?.value,
+        },
+      };
+
+      console.log('Data to be sent:', dataToSubmit);
+      const result = await updateEmployee(dataToSubmit, employeeId as string);
+
+      // Handle the response
+      if (result.status === 200) {
+        // Success handling
+        toast.success('Success', 'Employee details updated successfully');
+      } else {
+        // Error handling
+        toast.error('Error updating employee:', result.message);
+      }
+    } catch (error) {
+      toast.error('Error', 'Failed to update employee details');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -129,15 +141,22 @@ export function CompensationDetails({
               disabled={!isEditing}
               className="w-full"
             />
-            <FormSelectInput
-              options={frequency}
-              label="Employment Type"
-              option={paymentFrequency}
-              setOption={setPaymentFrequency}
-              model="employee"
-              isSearchable={false}
-              disabled={!isEditing}
-            />
+
+            <div>
+              <h2 className="pb-2 block text-sm font-medium leading-6">
+                Payment Frequency
+              </h2>
+              <Select
+                value={frequency}
+                onChange={(option) => setFrequency(option as Option)}
+                options={options}
+                isClearable={true}
+                isDisabled={!isEditing}
+                primaryColor="emerald"
+                isSearchable={false}
+                placeholder="Select Payment Frequency"
+              />
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -177,7 +196,7 @@ export function CompensationDetails({
               <CustomText
                 label="Other Allowance"
                 register={register}
-                name="otherAllowance"
+                name="otherAllowances"
                 type="number"
                 errors={errors}
                 placeholder="Eg; 9000"
@@ -204,7 +223,7 @@ export function CompensationDetails({
               <CustomText
                 label="Insurance Deductions"
                 register={register}
-                name="otherAllowance"
+                name="insuranceDeduction"
                 type="number"
                 errors={errors}
                 placeholder="Eg; 20%"
@@ -226,7 +245,7 @@ export function CompensationDetails({
               <CustomText
                 label="Other Deductions"
                 register={register}
-                name="otherDeductions"
+                name="otherDeduction"
                 type="number"
                 errors={errors}
                 placeholder="Eg; 5%"
@@ -236,14 +255,7 @@ export function CompensationDetails({
             </div>
           </div>
         </div>
-        {isEditing && (
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => reset()}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes</Button>
-          </div>
-        )}
+        {isEditing && <Submit loading={loading} />}
       </form>
     </div>
   );

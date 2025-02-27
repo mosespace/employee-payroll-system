@@ -32,6 +32,7 @@ type FormSelectInputProps = {
   // categories?: Category[] | null;
   // campuses?: Campus[] | null;
   isDialogOpen?: boolean;
+  isClearable?: boolean;
   disabled?: boolean;
   className?: string;
   onDialogOpenChange?: (open: boolean) => void;
@@ -48,6 +49,7 @@ export default function FormSelectInput({
   isSearchable = true,
   isMultiple = false,
   disabled = false,
+  isClearable = false,
   // categories,
   // campuses,
   isDialogOpen,
@@ -126,6 +128,7 @@ export default function FormSelectInput({
       <div className="flex items-center space-x-2 bg-transparent">
         <Select
           isDisabled={disabled}
+          isClearable={isClearable}
           primaryColor={'emerald'}
           value={option}
           isMultiple={isMultiple}

@@ -40,7 +40,7 @@ export default function CustomTextArea({
           )}
         />
         {errors[`${name}`] && (
-          <span className="text-sm text-red-600">Description is required</span>
+          <span className="text-sm text-red-600">{name} is required</span>
         )}
       </div>
       {helperText && (

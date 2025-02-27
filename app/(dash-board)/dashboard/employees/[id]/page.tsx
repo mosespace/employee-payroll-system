@@ -1,4 +1,4 @@
-import { getEmployeeById } from '@/actions/employees';
+import { getEmployeeById, getManagersAndAdmins } from '@/actions/employees';
 import EmployeeEditForm from '@/components/back-end/employee-forms/employee-edit-form';
 
 type Params = Promise<{ id: string }>;
@@ -11,6 +11,18 @@ export default async function EmployeeDetailsPage({
   const { id } = await params;
 
   const employee = await getEmployeeById(id);
+  const managersAndAdminsData = await getManagersAndAdmins();
+  const managersAndAdmins = managersAndAdminsData?.data;
 
-  return <EmployeeEditForm employee={employee.data} />;
+  const adminOptions = managersAndAdmins?.map((ad) => ({
+    value: ad.id,
+    label: ad.name,
+  }));
+
+  return (
+    <EmployeeEditForm
+      employee={employee.data}
+      managersAndAdmins={adminOptions as any}
+    />
+  );
 }

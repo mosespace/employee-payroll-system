@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from '@prisma/client';
+import { User } from '@prisma/client';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -33,7 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface EmploymentDetailsProps {
   isEditing: boolean;
-  data: User;
+  data?: User | null | undefined;
 }
 
 export function EmploymentDetails({ isEditing, data }: EmploymentDetailsProps) {

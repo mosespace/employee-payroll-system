@@ -5,37 +5,76 @@ import { Button } from '@/components/ui/button';
 import { User } from '@prisma/client';
 import { Edit2, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+
 import { BankDetails } from './bank-details';
 import { CompensationDetails } from './compensation-details';
-import { EmploymentDetails } from './employment-details';
 import { GeneralDetails } from './general-details';
-import { OfficialDetails } from '../../../app/(dash-board)/dashboard/employees/[id]/official-details';
-import { StatutoryDetails } from './statutory-details';
 import { SeparationDetails } from './separation-details';
+import { StatutoryDetails } from './statutory-details';
+import { Option } from 'react-tailwindcss-select/dist/components/type';
+import { OfficialDetails } from '@/app/(dash-board)/dashboard/employees/[id]/official-details';
 export default function EmployeeEditForm({
   employee,
+  managersAndAdmins,
 }: {
   employee: User | null | undefined;
+  managersAndAdmins: Option | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
 
   // Tab configuration array
   const tabsConfig = [
-    { id: 'official', label: 'Official', Component: OfficialDetails },
-    { id: 'general', label: 'General', Component: GeneralDetails },
-    { id: 'bank', label: 'Bank A/C', Component: BankDetails },
-    { id: 'statutory', label: 'Statutory', Component: StatutoryDetails },
+    {
+      id: 'official',
+      label: 'Official',
+      Component: () => (
+        <OfficialDetails
+          isEditing={isEditing}
+          managersAndAdmins={managersAndAdmins as any}
+          data={employee}
+        />
+      ),
+    },
+    {
+      id: 'general',
+      label: 'General',
+      Component: () => <GeneralDetails isEditing={isEditing} data={employee} />,
+    },
+    {
+      id: 'bank',
+      label: 'Bank A/C',
+      Component: () => (
+        <BankDetails isEditing={isEditing} data={employee as any} />
+      ),
+    },
+    {
+      id: 'statutory',
+      label: 'Statutory',
+      Component: () => (
+        <StatutoryDetails isEditing={isEditing} data={employee as any} />
+      ),
+    },
     {
       id: 'compensation',
       label: 'Compensation',
-      Component: CompensationDetails,
+      Component: () => (
+        <CompensationDetails isEditing={isEditing} data={employee as any} />
+      ),
     },
+    // {
+    //   id: 'employment',
+    //   label: 'Current Employment',
+    //   Component: () => (
+    //     <EmploymentDetails isEditing={isEditing} data={employee} />
+    //   ),
+    // },
     {
-      id: 'employment',
-      label: 'Current Employment',
-      Component: EmploymentDetails,
+      id: 'leave',
+      label: 'Leave',
+      Component: () => (
+        <SeparationDetails isEditing={isEditing} data={employee} />
+      ),
     },
-    { id: 'leave', label: 'Leave', Component: SeparationDetails },
   ];
 
   return (
@@ -91,7 +130,7 @@ export default function EmployeeEditForm({
                 </span>
               </div>
               <p className="text-muted-foreground">
-                Software Engineer • IT Department
+                {employee?.designation} • {employee?.department}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -105,12 +144,7 @@ export default function EmployeeEditForm({
             </div>
           </div>
 
-          <DynamicTabs
-            data={tabsConfig}
-            isEditing={isEditing}
-            id={employee?.id}
-            activeTab="official"
-          />
+          <DynamicTabs data={tabsConfig} activeTab="official" />
         </div>
       </div>
     </div>

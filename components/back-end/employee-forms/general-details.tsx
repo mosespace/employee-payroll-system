@@ -1,70 +1,119 @@
 'use client';
 
-import type { User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+import { updateEmployee } from '@/actions/employees';
 import CustomDatePicker from '@/components/back-end/re-usable-inputs/custom-date-picker';
-import FormSelectInput from '@/components/back-end/re-usable-inputs/select-input';
 import CustomText from '@/components/back-end/re-usable-inputs/text-reusable';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { toast } from '@mosespace/toast';
+import { useEffect, useState } from 'react';
+import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
+import Submit from './submit';
 
-const formSchema = z.object({
-  nationality: z.string().min(1, 'Nationality is required'),
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
-  maritalStatus: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  bloodGroup: z.string().optional(),
-  address: z.object({
-    street: z.string().min(1, 'Street address is required'),
-    city: z.string().min(1, 'City is required'),
-    state: z.string().min(1, 'State is required'),
-    country: z.string().min(1, 'Country is required'),
-    postalCode: z.string().min(1, 'Postal code is required'),
-  }),
-  personalEmail: z.string().email('Invalid email address'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<any>;
 
 interface GeneralDetailsProps {
   isEditing: boolean;
-  employee: User;
+  data?: User | null | undefined;
 }
 
-export function GeneralDetails({ isEditing, employee }: GeneralDetailsProps) {
-  const [maritalStatus, setMaritalStatus] = useState<Option | Option[]>([]);
-  const [gender, setGender] = useState<Option | Option[]>([]);
+export function GeneralDetails({ isEditing, data }: GeneralDetailsProps) {
+  const [maritalStatus, setMaritalStatus] = useState<Option | null>(null);
+  const [gender, setGender] = useState<Option | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const genders = [
+    { value: 'MALE', label: 'Male' },
+    { value: 'FEMALE', label: 'Female' },
+    { value: 'OTHER', label: 'Other' },
+  ];
+  const maritalStatuses = [
+    { value: 'STUDENT', label: 'Student' },
+    { value: 'SINGLE', label: 'Single' },
+    { value: 'MARRIED', label: 'Married' },
+    { value: 'DIVORCED', label: 'Divorced' },
+    { value: 'WIDOWED', label: 'Widowed' },
+  ];
+
+  // Initialize selections based on data when component mounts
+  useEffect(() => {
+    if (data) {
+      // Set marital status
+      if (data.maritalStatus) {
+        const matchedType = maritalStatuses.find(
+          (opt) => opt.value === data.employmentType,
+        );
+        if (matchedType) {
+          setMaritalStatus(matchedType);
+        }
+      }
+
+      // Set gender
+      if (data.department) {
+        const matchedGender = genders.find(
+          (dept) => dept.value === data.department,
+        );
+        if (matchedGender) {
+          setGender(matchedGender);
+        }
+      }
+    }
+  }, [data]);
 
   const {
     register,
     handleSubmit,
-    watch,
     reset,
     control,
     formState: { errors },
   } = useForm<any>({
-    // resolver: zodResolver(formSchema),
     defaultValues: {
-      ...employee,
+      nationality: data?.nationality,
+      gender: data?.gender,
+      maritalStatus: data?.maritalStatus,
+      bloodGroup: data?.bloodGroup,
+      dateOfBirth: data?.dateOfBirth,
+      postCode: data?.postCode,
+      streetAddress: data?.streetAddress,
+      city: data?.city,
+      state: data?.state,
+      country: data?.country,
+      personalEmail: data?.personalEmail,
+      phoneNumber: data?.phoneNumber,
     },
   });
 
-  async function onSubmit(data: FormValues) {
+  const employeeId = data?.id;
+  async function onSubmit(formData: FormValues) {
+    // console.log('FormData ✅:', formData);
+
     try {
-      const response = await fetch(`/api/employees/${employee?.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to update');
+      setLoading(true);
+      const dataToSubmit = {
+        ...formData,
+        maritalStatus: maritalStatus?.value || '',
+        gender: gender?.value || '',
+      };
+
+      // console.log('Data to be sent:', dataToSubmit);
+
+      const result = await updateEmployee(dataToSubmit, employeeId as string);
+
+      // Handle the response
+      if (result.status === 200) {
+        // Success handling
+        toast.success('Success', 'Employee details updated successfully');
+      } else {
+        // Error handling
+        toast.error('Error updating employee:', result.message);
+      }
     } catch (error) {
-      console.error('Error updating general details:', error);
+      toast.error('Error', 'Failed to update employee details');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -82,34 +131,36 @@ export function GeneralDetails({ isEditing, employee }: GeneralDetailsProps) {
             className="w-full"
           />
 
-          <FormSelectInput
-            options={[
-              { value: 'MALE', label: 'Male' },
-              { value: 'FEMALE', label: 'Female' },
-              { value: 'OTHER', label: 'Other' },
-            ]}
-            label="Gender"
-            option={gender}
-            setOption={setGender}
-            model="gender"
-            isSearchable={false}
-            disabled={!isEditing}
-          />
-          <FormSelectInput
-            options={[
-              { value: 'STUDENT', label: 'Student' },
-              { value: 'SINGLE', label: 'Single' },
-              { value: 'MARRIED', label: 'Married' },
-              { value: 'DIVORCED', label: 'Divorced' },
-              { value: 'WIDOWED', label: 'Widowed' },
-            ]}
-            label="Marital Status"
-            option={maritalStatus}
-            setOption={setMaritalStatus}
-            model="gender"
-            isSearchable={false}
-            disabled={!isEditing}
-          />
+          <div>
+            <h2 className="pb-2 block text-sm font-medium leading-6">Gender</h2>
+            <Select
+              value={gender}
+              onChange={(option) => setGender(option as Option)}
+              options={genders}
+              isClearable={true}
+              isDisabled={!isEditing}
+              primaryColor="emerald"
+              isSearchable={false}
+              placeholder="Select Gender"
+            />
+          </div>
+
+          <div>
+            <h2 className="pb-2 block text-sm font-medium leading-6">
+              Marital Status
+            </h2>
+            <Select
+              value={maritalStatus}
+              onChange={(option) => setMaritalStatus(option as Option)}
+              options={maritalStatuses}
+              isClearable={true}
+              isDisabled={!isEditing}
+              primaryColor="emerald"
+              isSearchable={false}
+              placeholder="Select Marital Status"
+            />
+          </div>
+
           <CustomText
             label="Blood Group"
             register={register}
@@ -140,7 +191,7 @@ export function GeneralDetails({ isEditing, employee }: GeneralDetailsProps) {
             <CustomText
               label="Street Address"
               register={register}
-              name="address"
+              name="streetAddress"
               errors={errors}
               placeholder="Eg; Kabaka Road"
               disabled={!isEditing}
@@ -195,14 +246,7 @@ export function GeneralDetails({ isEditing, employee }: GeneralDetailsProps) {
             className="w-full"
           />
         </div>
-        {isEditing && (
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => reset()}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes</Button>
-          </div>
-        )}
+        {isEditing && <Submit loading={loading} />}
       </form>
     </div>
   );

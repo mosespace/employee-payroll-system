@@ -1,30 +1,27 @@
 'use client';
 
-import type { User } from '@prisma/client';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+import { updateEmployee } from '@/actions/employees';
 import CustomText from '@/components/back-end/re-usable-inputs/text-reusable';
-import { Button } from '@/components/ui/button';
+import { toast } from '@mosespace/toast';
+import type { BankDetails, User } from '@prisma/client';
+import { useState } from 'react';
+import Submit from './submit';
 
-const formSchema = z.object({
-  bankName: z.string().min(1, 'Bank name is required'),
-  accountNumber: z.string().min(1, 'Account number is required'),
-  accountType: z.enum(['SAVINGS', 'CHECKING', 'CURRENT']),
-  branchName: z.string().min(1, 'Branch name is required'),
-  routingNumber: z.string().min(1, 'Routing number is required'),
-  swiftCode: z.string().optional(),
-  ibanNumber: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<any>;
 
 interface BankDetailsProps {
   isEditing: boolean;
-  data?: User;
+  data?: (User & { bankDetails: BankDetails }) | null | undefined;
 }
 
 export function BankDetails({ isEditing, data }: BankDetailsProps) {
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // console.log('Bank Details:', data);
+
   const {
     register,
     handleSubmit,
@@ -32,26 +29,46 @@ export function BankDetails({ isEditing, data }: BankDetailsProps) {
     reset,
     formState: { errors },
   } = useForm<any>({
-    // resolver: zodResolver(formSchema),
     defaultValues: {
-      ...data,
+      bankName: data?.bankDetails?.bankName,
+      accountNumber: data?.bankDetails?.accountNumber,
+      branchName: data?.bankDetails?.branchName,
+      routingNumber: data?.bankDetails?.routingNumber,
+      swiftCode: data?.bankDetails?.swiftCode,
+      ibanNumber: data?.bankDetails?.ibanNumber,
+      accountName: data?.bankDetails?.accountName,
     },
   });
 
   const employeeId = data?.id;
 
-  async function onSubmit(data: FormValues) {
+  async function onSubmit(formData: FormValues) {
+    // console.log('FormData ✅:', formData);
+
     try {
-      const response = await fetch(`/api/employees/${employeeId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      setLoading(true);
+      const dataToSubmit = {
+        bankDetails: {
+          ...formData,
+          // employeeId,
         },
-        body: JSON.stringify({ bankAccountDetails: data }),
-      });
-      if (!response.ok) throw new Error('Failed to update');
+      };
+
+      console.log('Data to be sent:', dataToSubmit);
+      const result = await updateEmployee(dataToSubmit, employeeId as string);
+
+      // Handle the response
+      if (result.status === 200) {
+        // Success handling
+        toast.success('Success', 'Employee details updated successfully');
+      } else {
+        // Error handling
+        toast.error('Error updating employee:', result.message);
+      }
     } catch (error) {
-      console.error('Error updating bank details:', error);
+      toast.error('Error', 'Failed to update employee details');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -77,7 +94,6 @@ export function BankDetails({ isEditing, data }: BankDetailsProps) {
             disabled={!isEditing}
             className="w-full"
           />
-
           <CustomText
             label="Branch Name"
             register={register}
@@ -92,7 +108,7 @@ export function BankDetails({ isEditing, data }: BankDetailsProps) {
             register={register}
             name="routingNumber"
             errors={errors}
-            type="number"
+            type="text"
             placeholder="Eg; 391731-CN-031"
             disabled={!isEditing}
             className="w-full"
@@ -110,21 +126,24 @@ export function BankDetails({ isEditing, data }: BankDetailsProps) {
             label="IBAN Number"
             register={register}
             name="ibanNumber"
-            type="number"
+            type="text"
             errors={errors}
             placeholder="Eg; 91731031"
             disabled={!isEditing}
             className="w-full"
-          />
+          />{' '}
         </div>
-        {isEditing && (
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => reset()}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes</Button>
-          </div>
-        )}
+        <CustomText
+          label="Account Names"
+          register={register}
+          name="accountName"
+          errors={errors}
+          placeholder="Eg; Kisakye Moses"
+          disabled={!isEditing}
+          // className="w-full"
+        />
+
+        {isEditing && <Submit loading={loading} />}
       </form>
     </div>
   );

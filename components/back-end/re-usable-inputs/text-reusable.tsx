@@ -25,7 +25,7 @@ export default function CustomText({
   placeholder,
   disabled = false,
   page,
-  className = 'col-span-full text-white',
+  className = 'col-span-full',
 }: TextInputProps) {
   return (
     <div className={cn('grid gap-2', className)}>
@@ -48,18 +48,37 @@ export default function CustomText({
         </Label>
       )}
 
-      <Input
-        disabled={disabled}
-        {...register(`${name}`, { required: true })}
-        id={`${name}`}
-        name={`${name}`}
-        type={type}
-        autoComplete="name"
-        placeholder={placeholder ? placeholder : ''}
-        className="bg-transparent border-brandBorder"
-      />
+      {type === 'phone' ? (
+        <div className="flex">
+          <div className="flex items-center justify-center px-3 border border-r-0 rounded-l-md border-brandBorder bg-transparent">
+            +256
+          </div>
+          <Input
+            disabled={disabled}
+            {...register(`${name}`, { required: true })}
+            id={`${name}`}
+            name={`${name}`}
+            type="tel"
+            autoComplete="tel"
+            placeholder={placeholder ? placeholder : ''}
+            className="bg-transparent border-brandBorder rounded-l-none"
+          />
+        </div>
+      ) : (
+        <Input
+          disabled={disabled}
+          {...register(`${name}`, { required: true })}
+          id={`${name}`}
+          name={`${name}`}
+          type={type}
+          autoComplete="name"
+          placeholder={placeholder ? placeholder : ''}
+          className="bg-transparent border-brandBorder"
+        />
+      )}
+
       {errors[`${name}`] && (
-        <span className="text-red-600  text-sm">{label} is required</span>
+        <span className="text-red-600 text-sm">{label} is required</span>
       )}
     </div>
   );

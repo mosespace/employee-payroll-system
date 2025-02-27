@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
 
 const employeeSchema = z.object({
   name: z.string().min(2),
@@ -148,10 +150,7 @@ export async function getEmployeeById(id: string) {
           take: 5,
           orderBy: { createdAt: 'desc' },
         },
-        leaves: {
-          take: 5,
-          orderBy: { createdAt: 'desc' },
-        },
+
         attendanceRecords: {
           take: 5,
           orderBy: { date: 'desc' },
@@ -160,6 +159,23 @@ export async function getEmployeeById(id: string) {
           take: 5,
           orderBy: { reviewDate: 'desc' },
         },
+        bankDetails: {
+          select: {
+            id: true,
+            accountNumber: true,
+            swiftCode: true,
+            ibanNumber: true,
+            accountType: true,
+            branchName: true,
+            accountName: true,
+            bankName: true,
+            employeeId: true,
+            routingNumber: true,
+          },
+        },
+        statutory: true,
+        compensation: true,
+        leaves: true,
       },
     });
 
@@ -182,6 +198,179 @@ export async function getEmployeeById(id: string) {
       data: null,
       status: 500,
       message: 'Server Error: Unable to fetch employee',
+    };
+  }
+}
+
+export async function updateEmployee(data: any, employeeId: string) {
+  try {
+    // Authorization check commented out but can be uncommented when needed
+    // const session = await getServerSession(authOptions);
+    // if (
+    //   !session ||
+    //   (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')
+    // ) {
+    //   return {
+    //     data: null,
+    //     message: 'Unauthorized',
+    //     status: 401,
+    //   };
+    // }
+    console.log('Log DATA 👨‍💻:', data);
+
+    // Check if data is provided
+    if (!data) {
+      return {
+        data: null,
+        status: 400,
+        message: 'Bad Request: No Data provided',
+      };
+    }
+
+    // Find if employee exists in the database
+    const employee = await getEmployeeById(employeeId);
+
+    if (!employee) {
+      return {
+        data: null,
+        status: 404,
+        message: 'Employee not found',
+      };
+    }
+
+    // Extract related entities data from the input
+    const { bankDetails, statutory, compensation, leaves, ...userData } = data;
+
+    // Update the user data
+    // Update the user data
+    const updated_employee = await db.user.update({
+      where: {
+        id: employeeId,
+      },
+      data: {
+        ...userData,
+        // Handle nested bank details update if provided
+        ...(bankDetails && {
+          bankDetails: {
+            upsert: {
+              create: {
+                ...bankDetails,
+              },
+              update: {
+                ...bankDetails,
+              },
+            },
+          },
+        }),
+        // Handle nested statutory details update if provided
+        ...(statutory && {
+          statutory: {
+            upsert: {
+              create: {
+                ...statutory,
+              },
+              update: {
+                ...statutory,
+              },
+            },
+          },
+        }),
+        // Handle nested compensation details update if provided
+        ...(compensation && {
+          compensation: {
+            upsert: {
+              create: {
+                ...compensation,
+              },
+              update: {
+                ...compensation,
+              },
+            },
+          },
+        }),
+        // Handle leaves update if provided (moved outside of compensation)
+        ...(leaves && {
+          leaves: {
+            create: Array.isArray(leaves)
+              ? leaves.map((leave) => ({
+                  leaveType: leave.leaveType,
+                  startDate: new Date(leave.startDate),
+                  endDate: new Date(leave.endDate),
+                  reason: leave.reason,
+                  noticePeriod: leave.noticePeriod
+                    ? parseInt(leave.noticePeriod)
+                    : null,
+                  status: leave.status || 'PENDING',
+                  remarks: leave.remarks,
+                }))
+              : {
+                  leaveType: leaves.leaveType,
+                  startDate: new Date(leaves.startDate),
+                  endDate: new Date(leaves.endDate),
+                  reason: leaves.reason,
+                  noticePeriod: leaves.noticePeriod
+                    ? parseInt(leaves.noticePeriod)
+                    : null,
+                  status: leaves.status || 'PENDING',
+                  remarks: leaves.remarks,
+                },
+          },
+        }),
+      },
+      include: {
+        bankDetails: true,
+        statutory: true,
+        compensation: true,
+        leaves: true,
+      },
+    });
+
+    revalidatePath(`/dashboard/employees/${updated_employee.id}`);
+
+    return {
+      data: updated_employee,
+      status: 200,
+      message: 'Employee updated successfully',
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      data: null,
+      status: 500,
+      message: 'Server Error: Unable to update employee',
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function getManagersAndAdmins() {
+  try {
+    const users = await db.user.findMany({
+      where: {
+        role: {
+          in: ['ADMIN', 'MANAGER'],
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        position: true,
+      },
+    });
+
+    return {
+      data: users,
+      status: 200,
+      message: 'Managers and admins fetched successfully',
+    };
+  } catch (error) {
+    console.error('Error fetching managers and admins:', error);
+    return {
+      data: null,
+      status: 500,
+      message: 'Failed to fetch managers and admins',
     };
   }
 }

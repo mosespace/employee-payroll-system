@@ -25,12 +25,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { signOut } from 'next-auth/react';
 
 export function NavUser(user: User) {
   const { isMobile } = useSidebar();
-  console.log(user);
+  // console.log(user);
 
   return (
     <SidebarMenu>

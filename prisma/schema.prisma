@@ -119,12 +119,12 @@ model CompensationDetails {
   transportAllowance Float?
   mealAllowance      Float?
   otherAllowances    Float?
-  paymentFrequency   PaymentFrequency @default(MONTHLY)
-  // deductions
   taxDeduction       Float?
+  // deductions
   insuranceDeduction Float?
   pensionDeduction   Float?
   otherDeduction     Float?
+  paymentFrequency   PaymentFrequency @default(MONTHLY)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -160,10 +160,11 @@ model User {
   phoneNumber      String?
   responsibilities String?
   notes            String?
+  designation      String?
   mobileNo         String?
   hireDate         DateTime?
   dateOfBirth      DateTime?
-  bloodGroup       DateTime?
+  bloodGroup       String?
   wef              DateTime?
   changeReason     String?
 
@@ -171,13 +172,15 @@ model User {
   position             String?
   department           String?
   reportingManagerId   String?
+  otherDepartment      String?
+  otherEmployment      String?
   checkInTime          DateTime?
   checkOutTime         DateTime?
   daysPerWeek          Int?
   probationPeriod      Int?
   contractDuration     Int?
   employmentType       EmploymentType?       @default(ON_SITE)
-  employmentDepartment EmploymentDepartment? @default(OTHER)
+  employmentDepartment EmploymentDepartment? @default(ENGINEERING)
   employmentStatus     EmploymentStatus?     @default(ACTIVE)
   manager              User?                 @relation("EmployeeManager", fields: [reportingManagerId], references: [id])
   managedEmployees     User[]                @relation("EmployeeManager")
@@ -189,7 +192,7 @@ model User {
   mobileMoneyDetails     Json?
   bankDetails            BankDetails?
   statutory              StatutoryDetails?
-  Compensation           CompensationDetails?
+  compensation           CompensationDetails?
 
   // Performance
   points            Int    @default(0)
@@ -200,7 +203,7 @@ model User {
   lockedAt          DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt()
-  isCampusModerator Boolean?  @default(false)
+  // isCampusModerator Boolean?  @default(false)
 
   // Relations
   accounts           Account[]
