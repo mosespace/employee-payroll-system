@@ -31,15 +31,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface OfficialDetailsProps {
   isEditing: boolean;
-  employeeId: string;
   employee?: User;
 }
 
-export function OfficialDetails({
-  isEditing,
-  employeeId,
-  employee,
-}: OfficialDetailsProps) {
+export function OfficialDetails({ isEditing, employee }: OfficialDetailsProps) {
   const {
     register,
     handleSubmit,
@@ -78,7 +73,7 @@ export function OfficialDetails({
 
   async function onSubmit(data: FormValues) {
     try {
-      const response = await fetch(`/api/employees/${employeeId}`, {
+      const response = await fetch(`/api/employees/${employee?.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -205,6 +200,7 @@ export function OfficialDetails({
               setOption={setOption}
               model="employee"
               isSearchable={false}
+              disabled={!isEditing}
             />
 
             <CustomText
@@ -235,6 +231,7 @@ export function OfficialDetails({
               setOption={setOption}
               model="department"
               isSearchable={false}
+              disabled={!isEditing}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">

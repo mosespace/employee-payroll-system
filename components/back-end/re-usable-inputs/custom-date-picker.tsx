@@ -23,7 +23,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   className = '',
 }) => {
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col space-y-2">
       <Label htmlFor={name}>{label}</Label>
       <Controller
         name={name}
@@ -33,7 +33,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             selected={field.value}
             onChange={(date) => field.onChange(date)}
             dateFormat="MMMM d, yyyy"
-            className={`w-full p-2 rounded-md ${className}`}
+            className={`w-full placeholder:text-black/60 p-2 border shadow-sm rounded-md ${className}`}
             placeholderText={`Select ${label.toLowerCase()}`}
             id={name}
           />

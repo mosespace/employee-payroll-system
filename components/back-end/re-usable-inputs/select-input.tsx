@@ -32,6 +32,7 @@ type FormSelectInputProps = {
   // categories?: Category[] | null;
   // campuses?: Campus[] | null;
   isDialogOpen?: boolean;
+  disabled?: boolean;
   className?: string;
   onDialogOpenChange?: (open: boolean) => void;
 };
@@ -46,6 +47,7 @@ export default function FormSelectInput({
   labelShown = true,
   isSearchable = true,
   isMultiple = false,
+  disabled = false,
   // categories,
   // campuses,
   isDialogOpen,
@@ -94,8 +96,11 @@ export default function FormSelectInput({
   const renderForm = () => {
     switch (model) {
       case 'campus':
+        return <> </>;
+
       // return <CampusForm />;
       case 'category':
+        return <> </>;
       // return <CategoryForm />;
       case 'course':
         return (
@@ -120,7 +125,8 @@ export default function FormSelectInput({
       )}
       <div className="flex items-center space-x-2 bg-transparent">
         <Select
-          primaryColor={'indigo'}
+          isDisabled={disabled}
+          primaryColor={'emerald'}
           value={option}
           isMultiple={isMultiple}
           isSearchable={isSearchable}

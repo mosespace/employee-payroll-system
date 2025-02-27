@@ -1,5 +1,5 @@
 import { getEmployeeById } from '@/actions/employees';
-import EmployeeEditForm from './employee-edit-form';
+import EmployeeEditForm from '@/components/back-end/employee-forms/employee-edit-form';
 
 type Params = Promise<{ id: string }>;
 

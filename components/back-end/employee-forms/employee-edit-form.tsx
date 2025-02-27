@@ -9,9 +9,9 @@ import { BankDetails } from './bank-details';
 import { CompensationDetails } from './compensation-details';
 import { EmploymentDetails } from './employment-details';
 import { GeneralDetails } from './general-details';
-import { OfficialDetails } from './official-details';
-import { SeparationDetails } from './separation-details';
+import { OfficialDetails } from '../../../app/(dash-board)/dashboard/employees/[id]/official-details';
 import { StatutoryDetails } from './statutory-details';
+import { SeparationDetails } from './separation-details';
 export default function EmployeeEditForm({
   employee,
 }: {
@@ -35,7 +35,7 @@ export default function EmployeeEditForm({
       label: 'Current Employment',
       Component: EmploymentDetails,
     },
-    { id: 'separation', label: 'Separation', Component: SeparationDetails },
+    { id: 'leave', label: 'Leave', Component: SeparationDetails },
   ];
 
   return (
@@ -109,7 +109,7 @@ export default function EmployeeEditForm({
             data={tabsConfig}
             isEditing={isEditing}
             id={employee?.id}
-            activeTab="general"
+            activeTab="official"
           />
         </div>
       </div>

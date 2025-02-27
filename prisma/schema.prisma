@@ -100,7 +100,7 @@ model StatutoryDetails {
   employeeId   String   @unique
   panNumber    String
   uanNumber    String
-  adhaarNumber String
+  aadhaarNumber String
   pfNumber     String?
   esiNumber    String?
   taxId        String?
@@ -116,8 +116,8 @@ model CompensationDetails {
   employeeId         String           @unique
   baseSalary         String
   housingAllowance   Float?
-  TransportAllowance Float?
-  MealAllowance      Float?
+  transportAllowance Float?
+  mealAllowance      Float?
   otherAllowances    Float?
   paymentFrequency   PaymentFrequency @default(MONTHLY)
   // deductions

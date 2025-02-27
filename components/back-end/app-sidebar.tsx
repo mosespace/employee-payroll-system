@@ -3,7 +3,6 @@
 import {
   ArrowLeftRight,
   BadgeEuro,
-  GalleryVerticalEnd,
   LayoutGrid,
   Settings,
   Users,
@@ -21,12 +20,14 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { buttonVariants } from './ui/button';
-import { usePathname } from 'next/navigation';
-import { Separator } from './ui/separator';
 import { siteConfig } from '@/constants/site';
+import { cn } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { buttonVariants } from '../ui/button';
+import { Separator } from '../ui/separator';
+import { NavUser } from './nav-user';
 
 // This is sample data.
 
@@ -60,9 +61,18 @@ export const data = [
   },
 ];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
+// export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+//   // const { data: session, status } = useSession();
+//   const pathname = usePathname();
 
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: any; // Replace 'any' with your actual user type
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  // console.log('USer:', user);
+  // const { data: session, status } = useSession();
+  const pathname = usePathname();
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -119,11 +129,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </Link>
             );
           })}
-        </nav>{' '}
+        </nav>
       </SidebarContent>
       <SidebarFooter>
         <div className="p-1">
           <SidebarOptInForm />
+        </div>
+        <div className="p-1">
+          <NavUser {...user} />
         </div>
       </SidebarFooter>
       <SidebarRail />

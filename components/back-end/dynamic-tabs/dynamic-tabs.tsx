@@ -44,7 +44,7 @@ export default function DynamicTabs({
       <div className="mt-6">
         {data.map((tab) => (
           <TabsContent key={tab.id} value={tab.id}>
-            <tab.Component isEditing={isEditing} employeeId={id} />
+            <tab.Component isEditing={isEditing} data={tab} />
           </TabsContent>
         ))}
       </div>
