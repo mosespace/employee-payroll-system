@@ -1,9 +1,9 @@
 'use client';
 
-import SubmitButton from '@/components/re-useable/submit-button';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Submit from '../employee-forms/submit';
 
 type FormHeaderProps = {
   title: string;
@@ -43,8 +43,8 @@ export default function FormHeader({
       </div>
       <div className="flex items-center justify-center gap-2">
         {/* <CloseButton href={href} parent={parent} /> */}
-        <SubmitButton
-          message={editingId ? `${title}` : ` ${title}`}
+        <Submit
+          // message={editingId ? `${title}` : ` ${title}`}
           loading={loading as boolean}
         />
       </div>
