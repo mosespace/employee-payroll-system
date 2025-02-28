@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { siteConfig } from '@/constants/site';
-import { UploadButton } from '@/utils/uploadthing';
+// import { UploadButton } from '@/utils/uploadthing';
 import Image from 'next/image';
 import React from 'react';
 type ImageInputProps = {
@@ -45,7 +45,7 @@ export default function MultipleImageInput({
               );
             })}
           </div>
-          <UploadButton
+          {/* <UploadButton
             className="mt-4 ut-button:!cursor-pointer ut-button:bg-brandColor ut-label:text-white ut-label:hover:text-brandBlack/50 ut-button:ut-readying:bg-orange-600/50"
             endpoint={endpoint}
             onClientUploadComplete={(res) => {
@@ -54,7 +54,7 @@ export default function MultipleImageInput({
             onUploadError={(error: Error) => {
               alert(`ERROR! ${error.message}`);
             }}
-          />
+          /> */}
         </div>
       </CardContent>
     </Card>

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadButton } from '@/utils/uploadthing';
+// import { UploadButton } from '@/utils/uploadthing';
 import { Download, Eye, File, FileText, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -133,7 +133,7 @@ const FileInput = ({
         <div className="grid gap-4">
           {fileUrl && renderPreview()}
           <div className="relative">
-            <UploadButton
+            {/* <UploadButton
               className="mt-4 ut-button:!cursor-pointer ut-button:bg-primary ut-label:text-white ut-label:hover:text-brandBlack/50 ut-button:ut-readying:bg-orange-600/50"
               endpoint={endpoint}
               onUploadBegin={() => {
@@ -150,7 +150,7 @@ const FileInput = ({
                 alert(`ERROR! ${error.message}`);
                 setIsLoading(false);
               }}
-            />
+            /> */}
             <p className="mt-2 text-xs text-gray-500">
               Maximum file size: {maxSizeMB}MB
             </p>
