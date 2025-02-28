@@ -72,7 +72,7 @@ export default function EmployeeEditForm({
       id: 'leave',
       label: 'Leave',
       Component: () => (
-        <SeparationDetails isEditing={isEditing} data={employee} />
+        <SeparationDetails isEditing={isEditing} data={employee as any} />
       ),
     },
   ];
