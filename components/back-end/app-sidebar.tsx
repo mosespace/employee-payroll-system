@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  AlignVerticalJustifyEnd,
   ArrowLeftRight,
   BadgeEuro,
   LayoutGrid,
@@ -36,42 +37,48 @@ export const data = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutGrid,
-    active: true,
+    roles: ['ADMIN', 'EMPLOYEE', 'MANAGER'],
   },
   {
     title: 'Payroll',
     href: '/dashboard/payroll',
     icon: BadgeEuro,
-    active: true,
+    roles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    title: 'Attendances',
+    href: '/dashboard/attendance',
+    icon: AlignVerticalJustifyEnd,
+    roles: ['ADMIN', 'EMPLOYEE', 'MANAGER'],
   },
   {
     title: 'Integrations',
     href: '/dashboard/integrations',
     icon: ArrowLeftRight,
+    roles: ['ADMIN'],
   },
   {
     title: 'Employees',
     href: '/dashboard/employees',
     icon: Users,
+    roles: ['ADMIN', 'MANAGER'],
   },
   {
     title: 'Settings',
     href: '/settings',
     icon: Settings,
+    roles: ['ADMIN'],
   },
 ];
 
-// export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 //   // const { data: session, status } = useSession();
 //   const pathname = usePathname();
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user: any; // Replace 'any' with your actual user type
+  user: any;
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
-  // console.log('USer:', user);
-  // const { data: session, status } = useSession();
   const pathname = usePathname();
   return (
     <Sidebar {...props}>
@@ -102,6 +109,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           {data.map((item) => {
             const segments = pathname.split('/dashboard').filter(Boolean);
 
+            // Skip rendering if user's role is not in item's roles
+            if (!item.roles.includes(user?.role)) {
+              return null;
+            }
+
             const isActive = (href: string) => {
               if (href === '/dashboard') {
                 return pathname === '/dashboard';
@@ -112,6 +124,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               const hrefWithoutDashboard = href.replace('/dashboard', '');
               return segments[0].startsWith(hrefWithoutDashboard);
             };
+
             return (
               <Link
                 key={item.href}

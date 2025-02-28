@@ -1,4 +1,4 @@
-import { sendEmail } from '@/emails';
+import { siteConfig } from '@/constants/site';
 import LoginLink from '@/emails/login-link';
 import WelcomeEmail from '@/emails/welcome-email';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
@@ -9,9 +9,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { Resend } from 'resend';
-import { validatePassword } from './password';
-import { siteConfig } from '@/constants/site';
 import { db } from './db';
+import { validatePassword } from './password';
 
 // Initialize rate limiter
 const ratelimit = new Ratelimit({
@@ -138,16 +137,23 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Missing credentials');
           }
 
-          // Rate limiting check
-          const { success } = await ratelimit.limit(credentials.email);
-          if (!success) {
-            throw new Error('Too many login attempts');
+          const environment = process.env.NODE_ENV;
+
+          if (environment === 'development') {
+            console.log('Skipped ratelimit in development');
+            const { success } = await ratelimit.limit(credentials.email);
+            if (!success) {
+              throw new Error('Too many login attempts');
+            }
           }
+          // Rate limiting check
 
           // Find user
           const user = await db.user.findUnique({
             where: { email: credentials.email },
           });
+
+          console.log('User:', user);
 
           if (!user || !user.passwordHash) {
             throw new Error('Invalid credentials');
@@ -186,6 +192,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             image: user.image,
+            role: user.role,
           };
         } catch (error) {
           console.error('Auth error:', error);

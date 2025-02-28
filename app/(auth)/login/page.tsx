@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { siteConfig } from '@/constants/site';
+import { toast } from '@mosespace/toast';
 import { Eye, EyeOff, Loader } from 'lucide-react';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -19,15 +20,9 @@ interface AuthState {
 }
 
 export default function AuthPage() {
-  const router = useRouter();
-
   const { data: session, status } = useSession();
-  // console.log('Status ✅:', status);
-
-  if (session) {
-    router.push('/dashboard');
-    return null;
-  }
+  console.log('Status ✅:', status);
+  const router = useRouter();
 
   const [state, setState] = React.useState<AuthState>({
     email: '',
@@ -36,19 +31,6 @@ export default function AuthPage() {
     isLoading: false,
     error: null,
   });
-
-  React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorParam = urlParams.get('error');
-
-    if (errorParam === 'OAuthAccountNotLinked') {
-      setState((prev) => ({
-        ...prev,
-        error:
-          'An account already exists with your email address. Please sign in with your another method or google account instead.',
-      }));
-    }
-  }, []);
 
   const validateCallbackUrl = (url: string | undefined): string => {
     if (!url) return '/dashboard';
@@ -120,13 +102,23 @@ export default function AuthPage() {
       });
 
       if (result?.error) {
-        throw new Error(result.error);
+        toast.error('Error', `${result.error}`);
       }
 
       const callbackUrl = validateCallbackUrl(
         window.location.search?.split('callbackUrl=')[1],
       );
-      router.push(callbackUrl);
+
+      if (result?.ok && !result?.error) {
+        toast.success('Success', `Login successful, you're being redirected`);
+        router.push(callbackUrl);
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: result?.error || 'Authentication failed',
+        }));
+      }
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -139,6 +131,27 @@ export default function AuthPage() {
   const togglePassword = () => {
     setState((prev) => ({ ...prev, showPassword: !prev.showPassword }));
   };
+
+  // Handle OAuth error parameters first (always execute this effect)
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+
+    if (errorParam === 'OAuthAccountNotLinked') {
+      setState((prev) => ({
+        ...prev,
+        error:
+          'An account already exists with your email address. Please sign in with your another method or google account instead.',
+      }));
+    }
+  }, []);
+
+  // This needs to be a separate effect
+  React.useEffect(() => {
+    if (session && status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [session, status, router]);
 
   return (
     <div
