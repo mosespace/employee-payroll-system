@@ -61,13 +61,6 @@ export default function EmployeeEditForm({
         <CompensationDetails isEditing={isEditing} data={employee as any} />
       ),
     },
-    // {
-    //   id: 'employment',
-    //   label: 'Current Employment',
-    //   Component: () => (
-    //     <EmploymentDetails isEditing={isEditing} data={employee} />
-    //   ),
-    // },
     {
       id: 'leave',
       label: 'Leave',
