@@ -4,6 +4,7 @@ import {
   AlignVerticalJustifyEnd,
   ArrowLeftRight,
   BadgeEuro,
+  DollarSign,
   LayoutGrid,
   Settings,
   Users,
@@ -62,6 +63,12 @@ export const data = [
     href: '/dashboard/employees',
     icon: Users,
     roles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    title: 'Payments',
+    href: '/dashboard/payments',
+    icon: DollarSign,
+    roles: ['EMPLOYEE'],
   },
   {
     title: 'Settings',

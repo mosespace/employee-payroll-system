@@ -6,7 +6,7 @@ export default async function PayrollDashboard() {
   const session = await getServerSession(authOptions);
   const userRole = session?.user?.role;
   const userId = session?.user?.id;
-  console.log(`User Role:`, session?.user);
+  // console.log(`User Role:`, session?.user);
 
   if (userRole === 'ADMIN' || userRole === 'MANAGER') {
     return (

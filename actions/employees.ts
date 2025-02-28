@@ -2,11 +2,10 @@
 
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 
 const employeeSchema = z.object({
   name: z.string().min(2),
@@ -371,6 +370,36 @@ export async function getManagersAndAdmins() {
       data: null,
       status: 500,
       message: 'Failed to fetch managers and admins',
+    };
+  }
+}
+
+export async function getEmployees() {
+  try {
+    const employees = await db.user.findMany({
+      include: {
+        manager: true,
+        bankDetails: true,
+        paymentRecords: true,
+        statutory: true,
+        bonuses: true,
+      },
+      where: {
+        role: 'EMPLOYEE',
+      },
+    });
+
+    return {
+      status: 200,
+      data: employees,
+      message: 'Employees fetched back successfully',
+    };
+  } catch (error) {
+    console.log('Failed to fetch Employees', error);
+    return {
+      message: 'Hello world',
+      data: null,
+      status: 500,
     };
   }
 }
