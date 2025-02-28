@@ -14,6 +14,7 @@ type TextInputProps = {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  isRequired?: boolean;
 };
 
 export default function CustomText({
@@ -24,6 +25,7 @@ export default function CustomText({
   type = 'text',
   placeholder,
   disabled = false,
+  isRequired = true,
   page,
   className = 'col-span-full',
 }: TextInputProps) {
@@ -55,7 +57,7 @@ export default function CustomText({
           </div>
           <Input
             disabled={disabled}
-            {...register(`${name}`, { required: true })}
+            {...register(`${name}`, { required: isRequired })}
             id={`${name}`}
             name={`${name}`}
             type="tel"

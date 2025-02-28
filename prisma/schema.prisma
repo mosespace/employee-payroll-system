@@ -224,6 +224,7 @@ model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
   action    String
+  description    String?
   details   Json?
   createdAt DateTime @default(now())
 

@@ -8,6 +8,7 @@ type TextAreaProps = {
   name: string;
   helperText?: string;
   disabled?: boolean;
+  isRequired?: boolean;
   height?: number; // Add new height prop
 };
 
@@ -17,6 +18,7 @@ export default function CustomTextArea({
   label,
   name,
   disabled = false,
+  isRequired = true,
   helperText = '',
   height = 3, // Default height of 3 rows
 }: TextAreaProps) {
@@ -32,7 +34,7 @@ export default function CustomTextArea({
         <Textarea
           disabled={disabled}
           id={name}
-          {...register(`${name}`, { required: true })}
+          {...register(`${name}`, { required: isRequired })}
           rows={height} // Use the height prop here
           className={cn(
             'block w-full border-brandBlack',

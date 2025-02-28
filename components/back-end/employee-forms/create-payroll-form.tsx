@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Calculator,
   Clock,
+  Loader,
   PersonStanding,
   Receipt,
   Wallet,
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+import { createPayroll } from '@/actions/payroll';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,39 +28,61 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@mosespace/toast';
 import { User } from '@prisma/client';
+import { useRouter } from 'next/navigation';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
 import CustomDatePicker from '../re-usable-inputs/custom-date-picker';
 import CustomTextArea from '../re-usable-inputs/custom-text-area';
 import CustomText from '../re-usable-inputs/text-reusable';
 
-// Define the schema for the payroll form
-const payrollFormSchema = z.object({
-  employeeId: z.string().min(1, { message: 'Please select an employee.' }),
-  paymentMethod: z
-    .enum(['BANK_TRANSFER', 'STRIPE', 'MOBILE_MONEY', 'CHECK'])
-    .default('BANK_TRANSFER'),
-  status: z.enum(['PENDING', 'COMPLETED', 'FAILED']).default('PENDING'),
-  paymentDate: z.date(),
-  transactionId: z.string().optional(),
-  payPeriodStart: z.date(),
-  payPeriodEnd: z.date(),
-  baseSalary: z
-    .number()
-    .min(0, { message: 'Base salary must be a positive number.' }),
-  housingAllowance: z.number().min(0).default(0),
-  transportAllowance: z.number().min(0).default(0),
-  mealAllowance: z.number().min(0).default(0),
-  otherAllowances: z.number().min(0).default(0),
-  taxDeductions: z.number().min(0).default(0),
-  insuranceDeduction: z.number().min(0).default(0),
-  pensionDeduction: z.number().min(0).default(0),
-  otherDeductions: z.number().min(0).default(0),
-  description: z.string().optional(),
-});
-
 // Define the type for the form values based on the schema
-type PayrollFormValues = z.infer<typeof payrollFormSchema>;
+type PayrollFormValues = z.infer<any>;
+
+const paymentMethods = [
+  {
+    value: 'BANK_TRANSFER',
+    label: 'Bank Transfer',
+  },
+  {
+    value: 'STRIPE',
+    label: 'Stripe',
+  },
+  {
+    value: 'MOBILE MONEY',
+    label: 'Mobile Money',
+  },
+  {
+    value: 'CHECK',
+    label: 'Check',
+  },
+];
+
+const paymentStatuses = [
+  {
+    value: 'FAILED',
+    label: 'Failed',
+  },
+  {
+    value: 'COMPLETED',
+    label: 'Completed',
+  },
+  {
+    value: 'PENDING',
+    label: 'Pending',
+  },
+  {
+    value: 'CHECK',
+    label: 'Check',
+  },
+];
+
+const sections = [
+  { id: 'employee', title: 'Employee Details', icon: PersonStanding },
+  { id: 'payment', title: 'Payment Details', icon: Wallet },
+  { id: 'period', title: 'Pay Period', icon: Clock },
+  { id: 'calculation', title: 'Salary Calculation', icon: Calculator },
+  { id: 'summary', title: 'Summary', icon: Receipt },
+];
 
 export default function CreatePayrollForm({
   employees,
@@ -66,9 +90,14 @@ export default function CreatePayrollForm({
   employees: User[];
 }) {
   const [netAmount, setNetAmount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [employee, setEmployee] = useState<Option | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [activeSection, setActiveSection] = useState<string>('employee');
+  const [paymentMethod, setPaymentMethod] = useState<Option | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<Option | null>(null);
 
+  const router = useRouter();
   const options = employees?.map((employee) => {
     return {
       value: employee.id,
@@ -126,8 +155,6 @@ export default function CreatePayrollForm({
   }, [watch]);
 
   const handleEmployeeChange = (option: Option | Option[] | null) => {
-    // console.log('Option:', option);
-
     if (!option || Array.isArray(option)) return;
     const employee = employees.find((emp) => emp.id === option.value);
     if (!employee) return;
@@ -151,64 +178,35 @@ export default function CreatePayrollForm({
     return (filledFields.length / requiredFields.length) * 100;
   };
 
-  async function onSubmit(values: PayrollFormValues) {
-    // Here, you would typically handle the form submission,
-    // such as sending the data to an API endpoint.
-    console.log(values);
-    toast.success(
-      'Payroll Created',
-      'Your payroll has been successfully created.',
-    );
+  async function onSubmit(formData: any) {
+    try {
+      setLoading(true);
+      const dataToSubmit = {
+        ...formData,
+        employeeId: employee?.value,
+        paymentMethod: paymentMethod?.value,
+        paymentStatus: paymentStatus?.value,
+        otherAllowance: parseFloat(formData.otherAllowance),
+      };
+
+      const result = await createPayroll(dataToSubmit as any);
+
+      if (result.status === 200) {
+        toast.success('Payroll Created', `${result.message}`);
+        router.push(`/dashboard/payroll/${result?.data?.id}`);
+      } else {
+        toast.error('Payroll Creation Error', `${result.message}`);
+      }
+    } catch (error) {
+      toast.error(
+        'Error',
+        'An unexpected error occurred, Make sure all required fields are fields',
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const [employee, setEmployee] = useState<Option | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<Option | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<Option | null>(null);
-
-  const paymentMethods = [
-    {
-      value: 'BANK_TRANSFER',
-      label: 'Bank Transfer',
-    },
-    {
-      value: 'STRIPE',
-      label: 'Stripe',
-    },
-    {
-      value: 'MOBILE MONEY',
-      label: 'Mobile Money',
-    },
-    {
-      value: 'CHECK',
-      label: 'Check',
-    },
-  ];
-  const paymentStatuses = [
-    {
-      value: 'FAILED',
-      label: 'Failed',
-    },
-    {
-      value: 'COMPLETED',
-      label: 'COmpleted',
-    },
-    {
-      value: 'PENDING',
-      label: 'Pending',
-    },
-    {
-      value: 'CHECK',
-      label: 'Check',
-    },
-  ];
-
-  const sections = [
-    { id: 'employee', title: 'Employee Details', icon: PersonStanding },
-    { id: 'payment', title: 'Payment Details', icon: Wallet },
-    { id: 'period', title: 'Pay Period', icon: Clock },
-    { id: 'calculation', title: 'Salary Calculation', icon: Calculator },
-    { id: 'summary', title: 'Summary', icon: Receipt },
-  ];
   return (
     <div className="container mx-auto py-10">
       <Card className="max-w-5xl mx-auto">
@@ -251,7 +249,7 @@ export default function CreatePayrollForm({
           </ScrollArea>
 
           <div>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-4">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeSection}
@@ -449,48 +447,52 @@ export default function CreatePayrollForm({
                             <CustomText
                               label="Base Salary"
                               register={register}
-                              name="basSalary"
+                              name="baseSalary"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; 80000"
+                              placeholder="Eg; 80000(UGX)"
                               className="w-full"
                             />
                             <CustomText
-                              label="Housing Allowance"
+                              label="Housing Allowance (Optional)"
                               register={register}
                               name="housingAllowance"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; 80000"
+                              isRequired={false}
+                              placeholder="Eg; 1000(UGX)"
                               className="w-full"
                             />
                             <CustomText
-                              label="Transport Allowance"
+                              label="Transport Allowance (Optional)"
                               register={register}
                               name="transportAllowance"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; 40000"
+                              isRequired={false}
+                              placeholder="Eg; 40000(UGX)"
                               className="w-full"
                             />
 
                             <CustomText
-                              label="Meal Allowance"
+                              label="Meal Allowance (Optional)"
                               register={register}
                               name="mealAllowance"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; 2000"
+                              isRequired={false}
+                              placeholder="Eg; 2000(UGX)"
                               className="w-full"
                             />
 
                             <CustomText
-                              label="Other Allowance"
+                              label="Other Allowance (Optional)"
                               register={register}
                               name="otherAllowance"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; 80000"
+                              isRequired={false}
+                              placeholder="Eg; 5000(UGX)"
                               className="w-full"
                             />
                           </CardContent>
@@ -505,41 +507,55 @@ export default function CreatePayrollForm({
                           </CardHeader>
                           <CardContent className="space-y-4">
                             <CustomText
-                              label="Tax Deductions"
+                              label="Tax Deductions (Optional)"
                               register={register}
                               name="taxDeductions"
                               errors={errors}
                               type="number"
+                              isRequired={false}
                               placeholder="Eg; 70(%)"
                               className="w-full"
                             />
                             <CustomText
-                              label="Insurance Deductions"
+                              label="Insurance Deductions (Optional)"
                               register={register}
                               name="insuranceDeductions"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; (50%)"
+                              isRequired={false}
+                              placeholder="Eg; 50(%)"
                               className="w-full"
                             />
 
                             <CustomText
-                              label="Pension Deductions"
+                              label="Pension Deductions (Optional)"
                               register={register}
                               name="pensionDeductions"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; (50%)"
+                              isRequired={false}
+                              placeholder="Eg; 40(%)"
                               className="w-full"
                             />
 
                             <CustomText
-                              label="Other Deductions"
+                              label="Other Deductions (Optional)"
                               register={register}
                               name="otherDeductions"
                               errors={errors}
                               type="number"
-                              placeholder="Eg; (50%)"
+                              isRequired={false}
+                              placeholder="Eg; 10(%)"
+                              className="w-full"
+                            />
+                            <CustomText
+                              label="Benefits (Optional)"
+                              register={register}
+                              name="benefits"
+                              isRequired={false}
+                              errors={errors}
+                              type="number"
+                              placeholder="Eg; 2 (People)"
                               className="w-full"
                             />
                           </CardContent>
@@ -708,12 +724,10 @@ export default function CreatePayrollForm({
                                   </span>
                                   <span className="font-medium text-red-600">
                                     -$
-                                    {(
-                                      (getValues('taxDeductions') || 0) +
+                                    {(getValues('taxDeductions') || 0) +
                                       (getValues('insuranceDeduction') || 0) +
                                       (getValues('pensionDeduction') || 0) +
-                                      (getValues('otherDeductions') || 0)
-                                    ).toFixed(2)}
+                                      (getValues('otherDeductions') || 0)}
                                   </span>
                                 </div>
                                 <Separator />
@@ -732,13 +746,25 @@ export default function CreatePayrollForm({
                               name="description"
                               errors={errors}
                               height={8}
+                              isRequired={false}
                             />
                           </div>
                         </CardContent>
                       </Card>
 
-                      <Button type="submit" className="w-full h-12 text-lg">
-                        Create Payroll
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full h-12 text-lg"
+                      >
+                        {loading ? (
+                          <span className="flex items-center gap-2">
+                            <Loader className="animate-spin size-4" />
+                            Creating...
+                          </span>
+                        ) : (
+                          <span> Create Payroll</span>
+                        )}
                       </Button>
                     </div>
                   )}

@@ -6,6 +6,7 @@ import {
   BadgeEuro,
   DollarSign,
   LayoutGrid,
+  Logs,
   Settings,
   Users,
 } from 'lucide-react';
@@ -24,14 +25,11 @@ import {
 } from '@/components/ui/sidebar';
 import { siteConfig } from '@/constants/site';
 import { cn } from '@/lib/utils';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { buttonVariants } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { NavUser } from './nav-user';
-
-// This is sample data.
 
 export const data = [
   {
@@ -56,7 +54,7 @@ export const data = [
     title: 'Integrations',
     href: '/dashboard/integrations',
     icon: ArrowLeftRight,
-    roles: ['ADMIN'],
+    roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Employees',
@@ -71,15 +69,18 @@ export const data = [
     roles: ['EMPLOYEE'],
   },
   {
+    title: 'Logs',
+    href: '/dashboard/logs',
+    icon: Logs,
+    roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
+  },
+  {
     title: 'Settings',
-    href: '/settings',
+    href: '/dashboard/settings',
     icon: Settings,
-    roles: ['ADMIN'],
+    roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
   },
 ];
-
-//   // const { data: session, status } = useSession();
-//   const pathname = usePathname();
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: any;
