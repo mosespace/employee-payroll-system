@@ -285,6 +285,8 @@ model PaymentRecord {
   payPeriodStart  DateTime
   payPeriodEnd    DateTime
   description     String?
+  reference       String?
+  type            String?       @default("SALARY")   // ALLOWANCE, OTHERS
   transactionId   String?
   status          String        @default("PENDING") // PENDING, COMPLETED, FAILED
   taxDeductions   Float?

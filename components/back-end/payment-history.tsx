@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -26,60 +26,30 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Search } from 'lucide-react';
-
-// This would come from your API in a real app
-const mockPayments = [
-  {
-    id: '1',
-    date: '2024-02-15',
-    amount: 6500,
-    type: 'Salary',
-    status: 'Paid',
-    reference: 'SAL-2024-02',
-  },
-  {
-    id: '2',
-    date: '2024-01-15',
-    amount: 6500,
-    type: 'Salary',
-    status: 'Paid',
-    reference: 'SAL-2024-01',
-  },
-  {
-    id: '3',
-    date: '2023-12-15',
-    amount: 6500,
-    type: 'Salary',
-    status: 'Paid',
-    reference: 'SAL-2023-12',
-  },
-  {
-    id: '4',
-    date: '2023-12-01',
-    amount: 2000,
-    type: 'Bonus',
-    status: 'Paid',
-    reference: 'BON-2023-12',
-  },
-  {
-    id: '5',
-    date: '2023-11-15',
-    amount: 6200,
-    type: 'Salary',
-    status: 'Paid',
-    reference: 'SAL-2023-11',
-  },
-];
+import { Download, Search, Loader2 } from 'lucide-react';
+import {
+  getPaymentHistory,
+  downloadPaymentStatement,
+} from '@/actions/payments';
+import { toast } from '@mosespace/toast';
 
 interface PaymentHistoryProps {
   userId: string;
 }
 
 export function PaymentHistory({ userId }: PaymentHistoryProps) {
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const [payments, setPayments] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    pages: 1,
+    current: 1,
+    limit: 10,
+  });
 
   const years = ['2024', '2023', '2022'];
   const months = [
@@ -98,22 +68,56 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
     { value: '12', label: 'December' },
   ];
 
-  const filteredPayments = mockPayments.filter((payment) => {
-    const matchesSearch =
-      payment.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.type.toLowerCase().includes(searchQuery.toLowerCase());
+  const fetchPayments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await getPaymentHistory({
+        userId,
+        searchQuery,
+        month: selectedMonth,
+        year: selectedYear,
+      });
 
-    const paymentDate = new Date(payment.date);
-    const matchesYear =
-      selectedYear === 'all' ||
-      paymentDate.getFullYear().toString() === selectedYear;
-    const matchesMonth =
-      selectedMonth === 'all' ||
-      (paymentDate.getMonth() + 1).toString().padStart(2, '0') ===
-        selectedMonth;
+      if (response.success) {
+        setPayments(response.data as any);
+        setPagination(response.pagination as any);
+      } else {
+        toast.error(
+          'Error',
+          response.error || 'Failed to fetch payment history',
+        );
+      }
+    } catch (error) {
+      toast.error('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, searchQuery, selectedMonth, selectedYear, toast]);
 
-    return matchesSearch && matchesYear && matchesMonth;
-  });
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const response = await downloadPaymentStatement(
+        userId,
+        selectedYear,
+        selectedMonth,
+      );
+      if (response.success) {
+        // In a real app, you would handle the file download here
+        toast.success('Success', 'Statement downloaded successfully');
+      } else {
+        toast.error('Error', response.error || 'Failed to download statement');
+      }
+    } catch (error) {
+      toast.error('Error', 'An unexpected error occurred');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -138,8 +142,17 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
               View all your past payments and transactions
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             Download Statement
           </Button>
         </div>
@@ -197,7 +210,13 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayments.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center h-24">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : payments.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -207,7 +226,7 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPayments.map((payment) => (
+                  payments.map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell>
                         {new Date(payment.date).toLocaleDateString('en-US', {

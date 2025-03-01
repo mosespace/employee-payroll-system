@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
@@ -11,34 +12,42 @@ import {
   Calendar,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// This would come from your API in a real app
-const mockStats = {
-  currentMonth: {
-    paid: true,
-    amount: 6500,
-    date: '2024-02-15',
-    status: 'Paid',
-  },
-  yearToDate: {
-    total: 78000,
-    average: 6500,
-    increase: 5.2,
-  },
-  nextPayment: {
-    estimated: '2024-03-15',
-    amount: 6500,
-  },
-};
+import { getPaymentStats } from '@/actions/payments';
 
 interface PaymentStatsProps {
   userId: string;
 }
 
 export function PaymentStats({ userId }: PaymentStatsProps) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const response = await getPaymentStats(userId);
+        if (response.success) {
+          setStats(response.data);
+
+          // console.log('Response:', response?.data);
+        } else {
+          setError(response.error || 'Failed to fetch payment statistics');
+        }
+      } catch (err) {
+        setError('An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, [userId]);
+
   const daysUntilNextPayment = () => {
+    if (!stats?.nextPayment?.estimated) return 0;
     const today = new Date();
-    const nextPayment = new Date(mockStats.nextPayment.estimated);
+    const nextPayment = new Date(stats.nextPayment.estimated);
     const diffTime = Math.abs(nextPayment.getTime() - today.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
@@ -55,6 +64,22 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
     return (currentDay / totalDays) * 100;
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // console.log('Stats:', stats);
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {/* Current Month Status */}
@@ -65,7 +90,7 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {mockStats.currentMonth.paid ? (
+          {stats.currentMonth.paid ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -78,8 +103,8 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
                 <div>
                   <p className="font-medium">Payment Received</p>
                   <p className="text-sm text-muted-foreground">
-                    ${mockStats.currentMonth.amount.toLocaleString()} •{' '}
-                    {mockStats.currentMonth.date}
+                    ${stats.currentMonth.amount.toLocaleString()} •{' '}
+                    {new Date(stats.currentMonth.date).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -91,13 +116,32 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
               className="rounded-lg border bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900 p-4"
             >
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <div
+                  className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                    stats.currentMonth.status?.toLowerCase() === 'completed'
+                      ? 'bg-emerald-100 dark:bg-emerald-900'
+                      : stats.currentMonth.status?.toLowerCase() === 'pending'
+                        ? 'bg-yellow-100 dark:bg-yellow-900'
+                        : 'bg-red-100 dark:bg-red-900'
+                  }`}
+                >
+                  <AlertCircle
+                    className={`h-5 w-5 ${
+                      stats.currentMonth.status?.toLowerCase() === 'completed'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : stats.currentMonth.status?.toLowerCase() === 'pending'
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : 'text-red-600 dark:text-red-400'
+                    }`}
+                  />
                 </div>
                 <div>
-                  <p className="font-medium">Payment Pending</p>
+                  <p className="font-medium">
+                    PAYMENT {stats.currentMonth.status || 'Failed'}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Expected on {mockStats.nextPayment.estimated}
+                    Expected on{' '}
+                    {new Date(stats.nextPayment.estimated).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -130,7 +174,7 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                ${mockStats.yearToDate.total.toLocaleString()}
+                ${stats.yearToDate.total.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground">Total earnings</p>
             </div>
@@ -139,13 +183,13 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
           <div className="grid grid-cols-2 gap-4 pt-4 border-t">
             <div>
               <p className="text-sm font-medium">
-                ${mockStats.yearToDate.average.toLocaleString()}
+                ${stats.yearToDate.average.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground">Monthly average</p>
             </div>
             <div>
               <p className="text-sm font-medium text-emerald-600">
-                +{mockStats.yearToDate.increase}%
+                +{stats.yearToDate.increase.toFixed(1)}%
               </p>
               <p className="text-sm text-muted-foreground">From last year</p>
             </div>
@@ -179,7 +223,7 @@ export function PaymentStats({ userId }: PaymentStatsProps) {
             <DollarSign className="h-4 w-4" />
             <AlertTitle>Estimated Amount</AlertTitle>
             <AlertDescription>
-              ${mockStats.nextPayment.amount.toLocaleString()}
+              ${stats.nextPayment.amount.toLocaleString()}
             </AlertDescription>
           </Alert>
         </CardContent>
