@@ -63,7 +63,7 @@ export async function checkIpAccess() {
 
     // Check allowed subnets (using the simple subnet check function)
     const allowedSubnets = [
-      { subnet: '192.168.1.0', mask: '255.255.255.0' }, // Your local network
+      { subnet: '192.167.1.0', mask: '255.255.255.0' }, // Your local network
     ];
 
     for (const { subnet, mask } of allowedSubnets) {
