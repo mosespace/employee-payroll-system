@@ -52,12 +52,11 @@ export async function checkIpAccess() {
     // Check allowed subnets (using the simple subnet check function)
     const allowedSubnets = [
       // Your current WiFi network (adjust these values to match your actual network)
-      { subnet: '192.167.1.0', mask: '255.255.255.0' }, // Common home network
-      // { subnet: '10.0.0.0', mask: '255.0.0.0' }, // Private network range
-      // { subnet: '172.16.0.0', mask: '255.240.0.0' }, // Private network range
+      { subnet: '192.167.1.0', mask: '255.257.255.0' }, // Common home network
       // You can add specific office WiFi subnet here
-      { subnet: '102.86.4.0', mask: '255.255.255.0' }, // Based on your example IP
+      // { subnet: '102.86.4.0', mask: '255.255.255.0' }, // Based on your example IP
     ];
+    // IP 102.86.4.175 allowed in subnet 102.86.4.0/255.255.255.0
 
     for (const { subnet, mask } of allowedSubnets) {
       if (isIpInSubnet(clientIp, subnet, mask)) {
