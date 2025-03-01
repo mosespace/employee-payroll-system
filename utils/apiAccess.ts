@@ -1,4 +1,3 @@
-// src/utils/simpleIpAccess.js
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 
@@ -50,20 +49,14 @@ export async function checkIpAccess() {
       return true;
     }
 
-    // Explicitly allowed IPs
-    const allowedIps = [
-      '102.86.4.175', // Your current IP from the error log
-      // Add any other IPs you want to allow
-    ];
-
-    if (allowedIps.includes(clientIp)) {
-      console.log('IP explicitly allowed:', clientIp);
-      return true;
-    }
-
     // Check allowed subnets (using the simple subnet check function)
     const allowedSubnets = [
-      { subnet: '192.167.1.0', mask: '255.255.255.0' }, // Your local network
+      // Your current WiFi network (adjust these values to match your actual network)
+      { subnet: '192.167.1.0', mask: '255.255.255.0' }, // Common home network
+      // { subnet: '10.0.0.0', mask: '255.0.0.0' }, // Private network range
+      // { subnet: '172.16.0.0', mask: '255.240.0.0' }, // Private network range
+      // You can add specific office WiFi subnet here
+      { subnet: '102.86.4.0', mask: '255.255.255.0' }, // Based on your example IP
     ];
 
     for (const { subnet, mask } of allowedSubnets) {
