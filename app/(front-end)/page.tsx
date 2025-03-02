@@ -41,7 +41,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container max-w-5xl mx-auto mx-auto px-4 py-16 text-center">
+        <section className="container max-w-5xl mx-auto px-4 py-16 text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
             Unified scheduling, seamless payroll
           </h1>
