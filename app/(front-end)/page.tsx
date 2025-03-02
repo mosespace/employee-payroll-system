@@ -13,7 +13,7 @@ export default function LandingPage() {
   return (
     <main className="overflow-hidden">
       {/* Main Content */}
-      <HeroSection
+      {/* <HeroSection
         className="min-h-screen flex items-center justify-center"
         title="Employee Project Management System"
         subtitle={{
@@ -37,11 +37,11 @@ export default function LandingPage() {
         //   lightLineColor: '#4a4a4a',
         //   darkLineColor: '#2a2a2a',
         // }}
-      />
+      /> */}
 
-      <main className="flex-1">
+      <main className="flex-1 max-w-5xl mx-auto">
         {/* Hero Section */}
-        <section className="container max-w-5xl mx-auto px-4 py-16 text-center">
+        <section className="containers pt-24 justify-center px-4 min-h-screen items-center mx-auto flex flex-col text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
             Unified scheduling, seamless payroll
           </h1>
@@ -186,14 +186,14 @@ export default function LandingPage() {
               <div className="md:w-1/2">
                 <div className="relative">
                   <Image
-                    src="/placeholder.svg?height=600&width=300"
+                    src="/logo.svg"
                     width={300}
                     height={600}
                     alt="Mobile app interface"
                     className="mx-auto"
                   />
                   {/* Adding phone content as an overlay */}
-                  <div className="absolute top-[20%] left-1/2 transform -translate-x-1/2 w-[85%] bg-white rounded-xl shadow-lg p-4">
+                  <div className="absolute top-[20%] left-1/2 transform -translate-x-1/2 w-[85%] bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Payroll Summary</span>
@@ -292,7 +292,7 @@ export default function LandingPage() {
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <Image
-                      src="/placeholder.svg?height=60&width=60"
+                      src="/logo.svg"
                       width={60}
                       height={60}
                       alt="User testimonial"
@@ -317,7 +317,7 @@ export default function LandingPage() {
               {/* Decorative user avatars */}
               <div className="absolute -bottom-6 -left-6 z-0">
                 <Image
-                  src="/placeholder.svg?height=48&width=48"
+                  src="logo.svg"
                   width={48}
                   height={48}
                   alt="User avatar"
@@ -326,7 +326,7 @@ export default function LandingPage() {
               </div>
               <div className="absolute -top-4 -right-6 z-0">
                 <Image
-                  src="/placeholder.svg?height=40&width=40"
+                  src="logo.svg"
                   width={40}
                   height={40}
                   alt="User avatar"
@@ -335,7 +335,7 @@ export default function LandingPage() {
               </div>
               <div className="absolute top-1/2 -right-10 z-0">
                 <Image
-                  src="/placeholder.svg?height=52&width=52"
+                  src="logo.svg"
                   width={52}
                   height={52}
                   alt="User avatar"
@@ -463,7 +463,7 @@ export default function LandingPage() {
 
                     <button
                       type="submit"
-                      className="inline-flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="inline-flex w-full justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary/70 hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                       Submit
                     </button>

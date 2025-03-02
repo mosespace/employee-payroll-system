@@ -21,7 +21,7 @@ interface AuthState {
 
 export default function AuthPage() {
   const { data: session, status } = useSession();
-  console.log('Status ✅:', status);
+  // console.log('Status ✅:', status);
   const router = useRouter();
 
   const [state, setState] = React.useState<AuthState>({
