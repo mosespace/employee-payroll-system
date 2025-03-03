@@ -109,3 +109,35 @@ export async function resetUserPassword(
     console.log(error);
   }
 }
+
+export async function deleteUser(userId: any) {
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      return {
+        data: null,
+        message: 'User your trying to delete does not exit',
+        status: 404,
+      };
+    }
+
+    await db.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+
+    return {
+      data: null,
+      message: 'User deleted successfully',
+      status: 200,
+    };
+  } catch (error) {
+    console.log('Error;', error);
+  }
+}
