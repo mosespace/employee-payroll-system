@@ -1,4 +1,6 @@
+import { getPayrollData } from '@/actions/payroll';
 import { MetricCard } from '@/components/metric-card';
+import { PayrollTable } from '@/components/payroll-table';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -88,7 +90,9 @@ const payrollData = [
   },
 ];
 
-export default function PayrollDashboard() {
+export default async function PayrollDashboard() {
+  const { payrollData, metrics } = await getPayrollData();
+
   return (
     <div className="flex-1 p-8">
       <div className="flex items-center justify-between">
@@ -118,7 +122,7 @@ export default function PayrollDashboard() {
         <p className="text-sm text-muted-foreground mb-4">
           Employee payroll details
         </p>
-        {/* <PayrollTable data={payrollData} /> */}
+        <PayrollTable data={payrollData} />
       </div>
     </div>
   );

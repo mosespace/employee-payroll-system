@@ -1,21 +1,18 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Users, Clock, DollarSign } from 'lucide-react';
 
 interface MetricCardProps {
   title: string;
   value: string;
+  type: string;
   image: string;
-  type: 'date' | 'employees' | 'hours' | 'money';
 }
 
-const icons = {
-  date: Calendar,
-  employees: Users,
-  hours: Clock,
-  money: DollarSign,
-};
-
-export function MetricCard({ title, value, image, type }: MetricCardProps) {
+export const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  type,
+  image,
+}) => {
   // const Icon = icons[type];
 
   return (
@@ -34,4 +31,4 @@ export function MetricCard({ title, value, image, type }: MetricCardProps) {
       </CardContent>
     </Card>
   );
-}
+};

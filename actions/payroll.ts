@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 // Define the schema for the payroll form validation
 const payrollFormSchema = z.object({
@@ -166,4 +168,166 @@ export async function getPayRollById(id: string) {
       message: 'Failed to fetch payroll. Please try again.',
     };
   }
+}
+
+export async function getPayrollData() {
+  // Get current month's date range
+  const currentDate = new Date();
+  const startDate = startOfMonth(currentDate);
+  const endDate = endOfMonth(currentDate);
+
+  // Fetch employees with their payment records
+  const employees = await db.user.findMany({
+    where: {
+      role: { in: ['EMPLOYEE', 'MANAGER'] },
+      employmentStatus: { in: ['ACTIVE', 'PROBATION'] },
+    },
+    include: {
+      paymentRecords: {
+        where: {
+          payPeriodStart: { gte: startDate },
+          payPeriodEnd: { lte: endDate },
+        },
+        orderBy: { paymentDate: 'desc' },
+        take: 1,
+      },
+      bonuses: {
+        where: {
+          date: { gte: startDate, lte: endDate },
+        },
+      },
+      compensation: true,
+    },
+  });
+
+  // Transform data for the PayrollTable
+  const payrollData = employees.map((employee) => {
+    // Calculate base salary from compensation or use default
+    const baseSalary = employee.compensation?.baseSalary
+      ? Number.parseFloat(employee.compensation.baseSalary)
+      : employee.baseSalary || 0;
+
+    // Get latest payment record if exists
+    const latestPayment = employee.paymentRecords[0];
+
+    // Calculate overtime from payment record
+    const overtime = latestPayment
+      ? latestPayment.amount - baseSalary > 0
+        ? latestPayment.amount - baseSalary
+        : 0
+      : 0;
+
+    // Sum all bonuses for the period
+    const bonuses = employee.bonuses.reduce(
+      (sum, bonus) => sum + bonus.amount,
+      0,
+    );
+
+    // Get expenses and training from payment record
+    const expenses = latestPayment?.benefits || 0;
+    const training = 0; // Assuming no training data in schema
+
+    // Calculate total additions
+    const totalAddition = overtime + bonuses + expenses;
+
+    // Calculate total payroll
+    const totalPayroll = baseSalary + totalAddition;
+
+    return {
+      id: employee.employeeId || employee.id,
+      name: employee.name,
+      salary: baseSalary,
+      overtime,
+      bonuses,
+      expenses,
+      training,
+      totalAddition,
+      totalPayroll,
+    };
+  });
+
+  // Calculate metrics
+  const nextPayrollDate = new Date();
+  nextPayrollDate.setMonth(nextPayrollDate.getMonth() + 1);
+  nextPayrollDate.setDate(1); // First day of next month
+
+  const totalEmployees = employees.length;
+
+  // Calculate total working hours (assuming 8 hours per day, 22 working days)
+  const totalWorkingHours = totalEmployees * 8 * 22;
+
+  // Calculate total unpaid payroll
+  const totalUnpaidPayroll = payrollData.reduce(
+    (sum, employee) => sum + employee.totalPayroll,
+    0,
+  );
+
+  const metrics = [
+    {
+      title: 'Next Payroll date',
+      value: format(nextPayrollDate, 'MMM d, yyyy'),
+      type: 'date',
+      image: '/dashboard/calendar.png',
+    },
+    {
+      title: 'Total Employee',
+      value: `${totalEmployees} (Employees)`,
+      type: 'employees',
+      image: '/dashboard/people.png',
+    },
+    {
+      title: 'Total Working Hours',
+      value: `${totalWorkingHours} (Hours)`,
+      type: 'hours',
+      image: '/dashboard/time.png',
+    },
+    {
+      title: 'Total Unpaid Payroll',
+      value: formatCurrency(totalUnpaidPayroll),
+      type: 'money',
+      image: '/dashboard/dollar.png',
+    },
+  ];
+
+  return { payrollData, metrics };
+}
+
+export async function processPayroll(employeeIds: string[]) {
+  const currentDate = new Date();
+  const startDate = startOfMonth(currentDate);
+  const endDate = endOfMonth(currentDate);
+
+  // Create payment records for selected employees
+  const results = await Promise.all(
+    employeeIds.map(async (employeeId) => {
+      const employee = await db.user.findUnique({
+        where: { id: employeeId },
+        include: { compensation: true },
+      });
+
+      if (!employee) return null;
+
+      const baseSalary = employee.compensation?.baseSalary
+        ? Number.parseFloat(employee.compensation.baseSalary)
+        : employee.baseSalary || 0;
+
+      // Create payment record
+      return db.paymentRecord.create({
+        data: {
+          employeeId,
+          amount: baseSalary,
+          paymentMethod: employee.preferredPaymentMethod || 'BANK_TRANSFER',
+          paymentDate: currentDate,
+          payPeriodStart: startDate,
+          payPeriodEnd: endDate,
+          description: `Salary payment for ${format(startDate, 'MMMM yyyy')}`,
+          status: 'PENDING',
+          netAmount: baseSalary,
+          createdById: 'system', // Replace with actual admin ID
+        },
+      });
+    }),
+  );
+
+  return results.filter(Boolean);
 }

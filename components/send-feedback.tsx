@@ -1,6 +1,7 @@
 'use client';
 
-import * as React from 'react';
+import { sendFeedback } from '@/actions/feedback';
+import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerContent,
@@ -9,10 +10,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -20,11 +17,14 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { sendFeedback } from '@/actions/feedback';
-import { useRouter } from 'next/navigation';
-import { Loader, MessageCircle } from 'lucide-react';
-import { Textarea } from './ui/textarea';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@mosespace/toast';
+import { Loader, Send } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Textarea } from './ui/textarea';
 
 const FormSchema = z.object({
   message: z.string().min(2, {
@@ -78,7 +78,7 @@ export const SendFeedback = ({ user }: any) => {
           className="fixed bottom-6 right-6 z-10 group inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full"
         >
           <div className="transition duration-300 group-hover:rotate-[360deg]">
-            <MessageCircle className="size-5 text-brandColor -rotate-12" />
+            <Send className="size-8 text-brandColor -rotate-12" />
           </div>
         </Button>
       </DrawerTrigger>
@@ -103,13 +103,17 @@ export const SendFeedback = ({ user }: any) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea placeholder="Enter request here..." {...field} />
+                    <Textarea
+                      className="h-24"
+                      placeholder="Enter request here..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button className="flex bg-brandColor text-white items-center gap-2">
+            <Button className="flex bg-primary/80 text-white items-center gap-2">
               {loading && <Loader className="w-4 h-4 animate-spin" />}
               send feedback
             </Button>
