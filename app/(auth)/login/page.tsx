@@ -19,7 +19,7 @@ interface AuthState {
   error: string | null;
 }
 
-export default function AuthPage() {
+export default function LoginForm() {
   const { data: session, status } = useSession();
   // console.log('Status ✅:', status);
   const router = useRouter();
@@ -264,7 +264,7 @@ export default function AuthPage() {
                   Password
                 </Label>
                 <Link
-                  href="?forgot-password=true"
+                  href="/forgot-password"
                   className="text-sm text-[#A1A1A9] hover:text-white"
                 >
                   Forgot?

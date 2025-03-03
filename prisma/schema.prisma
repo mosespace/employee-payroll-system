@@ -174,6 +174,7 @@ model User {
   reportingManagerId   String?
   otherDepartment      String?
   otherEmployment      String?
+  token                String?
   checkInTime          DateTime?
   checkOutTime         DateTime?
   daysPerWeek          Int?
@@ -206,6 +207,7 @@ model User {
   // isCampusModerator Boolean?  @default(false)
 
   // Relations
+  feedbacks          Feedback[]
   accounts           Account[]
   sessions           Session[]
   activityLogs       ActivityLog[]       @relation("UserActivityLog")
@@ -398,4 +400,13 @@ model Project {
   status      String    @default("ONGOING") // ONGOING, COMPLETED, CANCELLED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt()
+}
+
+model Feedback {
+  id        String   @id @default(cuid()) 
+  message   String?
+  user      User     @relation(fields: [userId], references: [id]) // Defining a many-to-one relationship
+  userId    String    // Foreign key 
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @map(name: "updated_at")
 }

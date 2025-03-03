@@ -11,6 +11,7 @@ import Breadcrumb from '../../components/back-end/breadcrumb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { SendFeedback } from '@/components/send-feedback';
 
 export default async function BackEndLayout({
   children,
@@ -38,6 +39,8 @@ export default async function BackEndLayout({
           {children}
         </div>
       </SidebarInset>
+
+      <SendFeedback user={session?.user} />
     </SidebarProvider>
   );
 }
