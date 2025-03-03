@@ -30,7 +30,7 @@ export const columns: ColumnDef<User>[] = [
 
       return (
         <span className="px-4 py-2 line-clamp-3">
-          <span className="font-semibold">UGX {user.email}</span>
+          <span className="font-semibold">{user.email}</span>
         </span>
       );
     },
