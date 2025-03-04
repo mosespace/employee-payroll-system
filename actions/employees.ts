@@ -7,6 +7,15 @@ import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+export type EmployeeBasic = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department?: string | null;
+  position?: string | null;
+};
+
 const employeeSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
@@ -402,4 +411,64 @@ export async function getEmployees() {
       status: 500,
     };
   }
+}
+
+export async function getEmployeeProjects(employeeId: string) {
+  try {
+    // check if user is authorized to view employee details
+    const session = await getServerSession(authOptions);
+    if (
+      !session ||
+      (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')
+    ) {
+      return {
+        data: null,
+        message: 'Unauthorized',
+        status: 401,
+      };
+    }
+
+    // check of there is a provided ID
+    if (!employeeId) {
+      return {
+        data: null,
+        status: 400,
+        message: 'Bad Request: No ID provided',
+      };
+    }
+    const employee = await db.user.findUnique({
+      where: { id: employeeId },
+      include: {
+        project: true,
+      },
+    });
+
+    if (!employee) {
+      return {
+        data: null,
+        status: 404,
+        message: 'Employee not found',
+      };
+    }
+
+    return {
+      data: employee,
+      status: 200,
+      message: 'Employee fetched successfully',
+    };
+  } catch (error) {
+    console.log('Error:', error);
+    return {
+      data: null,
+      status: 500,
+      message: 'Server Error: Unable to fetch employee',
+    };
+  }
+}
+
+export async function logProjectHours(formData: FormData) {
+  // In a real app, you would create a record in a project_hours table
+  // For now, we'll just return success
+
+  return { success: true };
 }

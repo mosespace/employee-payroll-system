@@ -19,7 +19,8 @@ export default async function PayrollDashboard() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-8 text-center">
-        Employee Dashboard
+        Welcome {session?.user.name}{' '}
+        <span className="text-5xl animate-bounce">👋</span>
       </h1>
       <ClockCard userId={userId as string} />
     </div>

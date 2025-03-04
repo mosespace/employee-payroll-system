@@ -27,6 +27,10 @@ export const data = [
     roles: ['EMPLOYEE'],
   },
   {
+    href: '/dashboard/projects',
+    roles: ['EMPLOYEE'],
+  },
+  {
     href: '/dashboard/logs',
     roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
   },

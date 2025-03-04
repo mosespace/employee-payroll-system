@@ -7,6 +7,7 @@ import {
   DollarSign,
   LayoutGrid,
   Logs,
+  Projector,
   Settings,
   Users,
 } from 'lucide-react';
@@ -66,6 +67,12 @@ export const data = [
     title: 'Payments',
     href: '/dashboard/payments',
     icon: DollarSign,
+    roles: ['EMPLOYEE'],
+  },
+  {
+    title: 'Projects',
+    href: '/dashboard/projects',
+    icon: Projector,
     roles: ['EMPLOYEE'],
   },
   {

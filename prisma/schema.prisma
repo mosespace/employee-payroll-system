@@ -209,6 +209,7 @@ model User {
   // Relations
   feedbacks          Feedback[]
   accounts           Account[]
+  projects           Project[]
   sessions           Session[]
   activityLogs       ActivityLog[]       @relation("UserActivityLog")
   paymentRecords     PaymentRecord[]     @relation("EmployeePayments")
@@ -397,6 +398,9 @@ model Project {
   description String?
   startDate   DateTime
   endDate     DateTime?
+  employeeId  String
+  user         User     @relation(fields: [employeeId], references: [id]) // Defining a many-to-one relationship
+
   status      String    @default("ONGOING") // ONGOING, COMPLETED, CANCELLED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt()
