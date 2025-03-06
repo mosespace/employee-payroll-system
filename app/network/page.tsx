@@ -4,7 +4,8 @@ import React from 'react';
 
 export default async function page() {
   // Check IP access before rendering
-  await checkIpAccess();
+  const res = await checkIpAccess();
+  // console.log('Response:', res);
 
   return <div>Welcome to Network Restricted Route</div>;
 }

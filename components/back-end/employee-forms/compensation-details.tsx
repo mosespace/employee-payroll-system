@@ -25,10 +25,6 @@ export function CompensationDetails({
   isEditing,
   data,
 }: CompensationDetailsProps) {
-  const [paymentFrequency, setPaymentFrequency] = useState<Option | Option[]>(
-    [],
-  );
-
   const [loading, setLoading] = useState<boolean>(false);
   const [frequency, setFrequency] = useState<Option | null>(null);
 

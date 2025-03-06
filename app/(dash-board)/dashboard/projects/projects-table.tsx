@@ -59,7 +59,7 @@ export const columns: ColumnDef<ProjectWithDetails>[] = [
     ),
   },
   {
-    accessorKey: 'client',
+    accessorKey: 'clientName',
     header: 'Client',
   },
   {
@@ -110,7 +110,7 @@ export const columns: ColumnDef<ProjectWithDetails>[] = [
       const amount = Number.parseFloat(row.getValue('budget'));
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'UGX',
       }).format(amount);
     },
   },
@@ -226,7 +226,7 @@ export function ProjectsTable({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Projects</SelectItem>
-            <SelectItem value="ongoing">Active</SelectItem>
+            <SelectItem value="ongoing">On Going</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>

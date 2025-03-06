@@ -8,12 +8,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 export type EmployeeBasic = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department?: string | null;
-  position?: string | null;
+  value: string;
+  label: string;
 };
 
 const employeeSchema = z.object({
@@ -417,10 +413,7 @@ export async function getEmployeeProjects(employeeId: string) {
   try {
     // check if user is authorized to view employee details
     const session = await getServerSession(authOptions);
-    if (
-      !session ||
-      (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')
-    ) {
+    if (!session) {
       return {
         data: null,
         message: 'Unauthorized',
@@ -439,7 +432,7 @@ export async function getEmployeeProjects(employeeId: string) {
     const employee = await db.user.findUnique({
       where: { id: employeeId },
       include: {
-        project: true,
+        projects: true,
       },
     });
 
@@ -471,4 +464,36 @@ export async function logProjectHours(formData: FormData) {
   // For now, we'll just return success
 
   return { success: true };
+}
+
+export async function getOnlyEmployees() {
+  try {
+    const employees = await db.user.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        role: 'EMPLOYEE',
+      },
+    });
+
+    return {
+      status: 200,
+      data: employees?.map((e) => {
+        return {
+          value: e.id,
+          label: e.name,
+        };
+      }),
+      message: 'Employees fetched back successfully',
+    };
+  } catch (error) {
+    console.log('Failed to fetch Employees', error);
+    return {
+      message: 'Hello world',
+      data: null,
+      status: 500,
+    };
+  }
 }

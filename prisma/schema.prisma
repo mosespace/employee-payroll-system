@@ -396,6 +396,8 @@ model Project {
   id          String    @id @default(cuid())
   name        String
   description String?
+  clientName  String?
+  budget      Float?
   startDate   DateTime
   endDate     DateTime?
   employeeId  String

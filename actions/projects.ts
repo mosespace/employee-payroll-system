@@ -1,6 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
+import { ok } from 'assert';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -70,33 +71,22 @@ export async function getProject(
   };
 }
 
-export async function createProject(formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-
-  // Handle array of assigned employees
-  const assignedEmployeeIds = formData.getAll(
-    'assignedEmployeeIds',
-  ) as string[];
-
+export async function createProject(formData: any) {
   try {
-    const validatedData = projectSchema.parse({
-      ...data,
-      assignedEmployeeIds,
-    });
+    // console.log('Form Data ✅:', formData);
 
-    await db.project.create({
+    const req = await db.project.create({
       data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        startDate: validatedData.startDate,
-        endDate: validatedData.endDate,
-        status: validatedData.status,
-        // In a real app, you would create relations to clients and employees
+        ...formData,
       },
     });
 
     revalidatePath('/dashboard/projects');
-    redirect('/dashboard/projects');
+    return {
+      status: 201,
+      message: 'Thanks',
+      data: req,
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Validation error:', error.errors);
@@ -108,34 +98,21 @@ export async function createProject(formData: FormData) {
   }
 }
 
-export async function updateProject(id: string, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-
-  // Handle array of assigned employees
-  const assignedEmployeeIds = formData.getAll(
-    'assignedEmployeeIds',
-  ) as string[];
-
+export async function updateProject(id: string, formData: any) {
   try {
-    const validatedData = projectSchema.parse({
-      ...data,
-      assignedEmployeeIds,
-    });
-
-    await db.project.update({
+    const req = await db.project.update({
       where: { id },
       data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        startDate: validatedData.startDate,
-        endDate: validatedData.endDate,
-        status: validatedData.status,
-        // In a real app, you would update relations to clients and employees
+        ...formData,
       },
     });
 
     revalidatePath('/dashboard/projects');
-    redirect('/dashboard/projects');
+    return {
+      status: 201,
+      message: 'Project updated successfully.',
+      data: req,
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Validation error:', error.errors);
@@ -158,5 +135,34 @@ export async function deleteProject(id: string) {
   } catch (error) {
     console.error('Failed to delete project:', error);
     return { success: false, message: 'Failed to delete project' };
+  }
+}
+
+export async function getProjectById(id: string) {
+  try {
+    if (!id) {
+      return {
+        data: null,
+        status: 404,
+        message: `The project with id ${id} does not exist in our database`,
+      };
+    }
+
+    const project = await db.project.findUnique({
+      where: { id },
+    });
+    return {
+      data: project,
+      status: 200,
+      message: `Project with ${id} fetched back successfully`,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Error:', error.errors);
+      return { success: false, errors: error.errors };
+    }
+
+    console.error('Failed to fetch project:', error);
+    return { success: false, message: 'Failed to update project' };
   }
 }

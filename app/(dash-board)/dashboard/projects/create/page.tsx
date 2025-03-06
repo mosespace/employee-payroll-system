@@ -1,8 +1,12 @@
-import { getEmployees } from '@/actions/employees';
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+import { getOnlyEmployees } from '@/actions/employees';
 import { ProjectForm } from '@/components/back-end/project-form';
 
 export default async function CreateProjectPage() {
-  const employees = await getEmployees();
+  const session = await getServerSession(authOptions);
+  const employeesData = await getOnlyEmployees();
+  console.log('Employees ✅:', employeesData?.data);
 
   return (
     <div className="flex-1 p-8">
@@ -11,7 +15,10 @@ export default async function CreateProjectPage() {
         <p className="text-muted-foreground">Add a new project to the system</p>
       </div>
 
-      <ProjectForm employees={employees.data as any} />
+      <ProjectForm
+        employees={employeesData?.data as any}
+        user={session?.user}
+      />
     </div>
   );
 }

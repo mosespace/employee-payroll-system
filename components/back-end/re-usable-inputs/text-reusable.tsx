@@ -11,6 +11,7 @@ type TextInputProps = {
   errors: any;
   type?: string;
   page?: string;
+  currency?: string;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -23,6 +24,7 @@ export default function CustomText({
   name,
   errors,
   type = 'text',
+  currency = '$',
   placeholder,
   disabled = false,
   isRequired = true,
@@ -62,6 +64,21 @@ export default function CustomText({
             name={`${name}`}
             type="tel"
             autoComplete="tel"
+            placeholder={placeholder ? placeholder : ''}
+            className="bg-transparent border-brandBorder rounded-l-none"
+          />
+        </div>
+      ) : type === 'currency' ? (
+        <div className="flex">
+          <div className="flex items-center justify-center px-3 border border-r-0 rounded-l-md border-brandBorder bg-transparent">
+            {currency}
+          </div>
+          <Input
+            disabled={disabled}
+            {...register(`${name}`, { required: isRequired })}
+            id={`${name}`}
+            name={`${name}`}
+            type="number"
             placeholder={placeholder ? placeholder : ''}
             className="bg-transparent border-brandBorder rounded-l-none"
           />
