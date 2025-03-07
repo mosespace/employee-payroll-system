@@ -436,6 +436,7 @@ export async function updatePayroll(id: string, formData: PayrollFormValues) {
           paymentId: paymentRecord.id,
           employeeId: formData.employeeId,
           amount: netAmount,
+          status: formData.status,
         },
       },
     });

@@ -9,6 +9,7 @@ import Submit from '@/components/back-end/employee-forms/submit';
 import PasswordInput from '@/components/back-end/re-usable-inputs/password-input';
 import { toast } from '@mosespace/toast';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createActivityLog } from '@/actions/logs';
 
 export type ResetProps = {
   cPassword: string;
@@ -34,7 +35,7 @@ export default function ResetPasswordForm() {
       setLoading(false);
       return;
     }
-    console.log(email, token, data.password);
+    // console.log(email, token, data.password);
     try {
       const res = await resetUserPassword(email, token, data.password);
       if (res?.status === 404) {
@@ -43,6 +44,17 @@ export default function ResetPasswordForm() {
         return;
       }
       setLoading(false);
+
+      const logData = {
+        userId: email,
+        action: 'reset-password',
+        description: 'From resetting Password for the system',
+        details: {
+          status: 'Successfully reset',
+        },
+      };
+      // create log
+      await createActivityLog(logData);
       toast.success('Success', 'Password reset successfully');
       router.push('/login');
     } catch (error) {

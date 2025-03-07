@@ -1,10 +1,11 @@
 'use server';
 
+import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { ok } from 'assert';
+import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { createActivityLog } from './logs';
 
 // Extend the Project model with additional fields
 export type ProjectWithDetails = {
@@ -21,21 +22,6 @@ export type ProjectWithDetails = {
   createdAt: Date;
   updatedAt: Date;
 };
-
-// Schema for project creation/update
-const projectSchema = z.object({
-  name: z.string().min(3, 'Project name must be at least 3 characters'),
-  description: z.string().optional(),
-  startDate: z.string().transform((str) => new Date(str)),
-  endDate: z
-    .string()
-    .optional()
-    .transform((str) => (str ? new Date(str) : undefined)),
-  status: z.enum(['ONGOING', 'COMPLETED', 'CANCELLED']),
-  client: z.string().optional(),
-  budget: z.coerce.number().optional(),
-  assignedEmployeeIds: z.array(z.string()).optional(),
-});
 
 export async function getProjects(): Promise<ProjectWithDetails[]> {
   // Fetch projects from database
@@ -73,6 +59,8 @@ export async function getProject(
 
 export async function createProject(formData: any) {
   try {
+    const session = await getServerSession(authOptions);
+    const user = session?.user;
     // console.log('Form Data ✅:', formData);
 
     const req = await db.project.create({
@@ -81,6 +69,18 @@ export async function createProject(formData: any) {
       },
     });
 
+    const data = {
+      userId: user?.id,
+      action: 'create',
+      description: 'Created a project',
+      details: {
+        projectId: req.id,
+        employeeId: req.employeeId,
+        status: req.status,
+      },
+    };
+    // create log
+    await createActivityLog(data);
     revalidatePath('/dashboard/projects');
     return {
       status: 201,
@@ -100,6 +100,8 @@ export async function createProject(formData: any) {
 
 export async function updateProject(id: string, formData: any) {
   try {
+    const session = await getServerSession(authOptions);
+    const user = session?.user;
     const req = await db.project.update({
       where: { id },
       data: {
@@ -107,6 +109,18 @@ export async function updateProject(id: string, formData: any) {
       },
     });
 
+    const data = {
+      userId: user?.id,
+      action: 'update',
+      description: 'Updated a project',
+      details: {
+        projectId: req.id,
+        employeeId: req.employeeId,
+        status: req.status,
+      },
+    };
+    // create log
+    await createActivityLog(data);
     revalidatePath('/dashboard/projects');
     return {
       status: 201,
@@ -125,11 +139,26 @@ export async function updateProject(id: string, formData: any) {
 }
 
 export async function deleteProject(id: string) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
+
   try {
-    await db.project.delete({
+    const req = await db.project.delete({
       where: { id },
     });
 
+    const data = {
+      userId: user?.id,
+      action: 'deleted',
+      description: 'Deleted a project',
+      details: {
+        projectId: req.id,
+        employeeId: req.employeeId,
+        status: req.status,
+      },
+    };
+    // create log
+    await createActivityLog(data);
     revalidatePath('/dashboard/projects');
     return { success: true };
   } catch (error) {

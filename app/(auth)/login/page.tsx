@@ -1,5 +1,6 @@
 'use client';
 
+import { createActivityLog } from '@/actions/logs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,9 +21,9 @@ interface AuthState {
 }
 
 export default function LoginForm() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   // console.log('Status ✅:', status);
-  const router = useRouter();
 
   const [state, setState] = React.useState<AuthState>({
     email: '',
@@ -110,6 +111,16 @@ export default function LoginForm() {
       );
 
       if (result?.ok && !result?.error) {
+        const data = {
+          userId: 'userId',
+          action: 'login',
+          description: 'Logged into the system with email',
+          details: {
+            status: 'loggedIn',
+          },
+        };
+        // create log
+        await createActivityLog(data);
         toast.success('Success', `Login successful, you're being redirected`);
         router.push(callbackUrl);
       } else {
