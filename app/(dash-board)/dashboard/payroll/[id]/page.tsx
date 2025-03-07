@@ -6,14 +6,14 @@ type Params = Promise<{ id: string }>;
 
 export default async function PayrollPage({ params }: { params: Params }) {
   const { id } = await params;
-  const payrollData = await getPayRollById(id);
+  const payrollData = await getPayRollById({ employeeId: id });
   const payroll = payrollData?.data;
   const activityLogs = payrollData?.data?.activityLogs;
 
   const employees_data = await getEmployees();
   const employees = employees_data?.data;
 
-  // console.log('Activity Logs ✅:', employee);
+  // console.log('Payroll ✅:', payroll);
 
   return (
     <div className="container mx-auto py-8 px-4">

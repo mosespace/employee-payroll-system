@@ -7,10 +7,11 @@ type Params = Promise<{ id: string }>;
 
 export default async function PaymentPage({ params }: { params: Params }) {
   const { id } = await params;
-  const payrollData = await getPayRollById(id);
+  const employeeId = id;
+  const payrollData = await getPayRollById({ employeeId });
   const payroll = payrollData?.data;
   const activityLogs = payrollData?.data?.activityLogs;
-  // console.log('Payroll Data✅:', id);
+  // console.log('Payroll Data✅:', payrollData);
 
   const action_data = {
     id: payroll?.id || '',

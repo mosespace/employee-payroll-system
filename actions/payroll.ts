@@ -115,13 +115,18 @@ export async function createPayroll(formData: PayrollFormValues) {
   }
 }
 
-export async function getPayRollById(id: string) {
-  // console.log('Id ✅:', id);
-
-  if (!id) {
+export async function getPayRollById({
+  id,
+  employeeId,
+}: {
+  id?: string;
+  employeeId?: string;
+}) {
+  // Check if either id or employeeId is provided
+  if (!id && !employeeId) {
     return {
       status: 404,
-      message: 'Please provide id',
+      message: 'Please provide either id or employeeId',
       data: null,
     };
   }
@@ -134,12 +139,18 @@ export async function getPayRollById(id: string) {
       return { status: 500, message: 'Unauthorized access. Please log in.' };
     }
 
-    // Fetch the payment record
-    const paymentRecord = await db.paymentRecord.findUnique({
-      where: {
-        id,
-      },
+    // Create the where clause based on provided parameters
+    const whereClause: any = {};
 
+    if (id) {
+      whereClause.id = id;
+    } else if (employeeId) {
+      whereClause.employeeId = employeeId;
+    }
+
+    // Fetch the payment record
+    const paymentRecord = await db.paymentRecord.findFirst({
+      where: whereClause,
       include: {
         createdBy: true,
         employee: {
@@ -152,45 +163,43 @@ export async function getPayRollById(id: string) {
 
     if (!paymentRecord) {
       return {
-        status: 500,
-        message: 'Please try again later',
+        status: 404,
+        message: 'Payment record not found',
         data: null,
       };
     }
 
-    // console.log('Payroll Record✅:', paymentRecord);
-    if (paymentRecord) {
-      const activityLogs = await db.activityLog.findMany({
-        where: {
-          details: {
-            path: ['employeeId'],
-            equals: paymentRecord?.employeeId || '',
+    const activityLogs = await db.activityLog.findMany({
+      where: {
+        details: {
+          path: ['employeeId'],
+          equals: paymentRecord.employeeId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            position: true,
+            role: true,
           },
         },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-              position: true,
-              role: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-      return {
-        status: 200,
-        message: 'Payroll fetched back successfully',
-        data: { ...paymentRecord, activityLogs },
-      };
-    }
-  } catch (error) {
-    console.error('Error creating payroll:', error);
     return {
+      status: 200,
+      message: 'Payroll fetched successfully',
+      data: { ...paymentRecord, activityLogs },
+    };
+  } catch (error) {
+    console.error('Error fetching payroll:', error);
+    return {
+      status: 500,
       message: 'Failed to fetch payroll. Please try again.',
     };
   }
@@ -259,10 +268,8 @@ export async function getPayrollData() {
     // Calculate total payroll
     const totalPayroll = baseSalary + totalAddition;
 
-    // console.log('Payment ❌', employee.paymentRecords);
-
     return {
-      id: employee.employeeId,
+      id: employee.id,
       name: employee.name,
       salary: baseSalary,
       overtime,
@@ -271,6 +278,16 @@ export async function getPayrollData() {
       training,
       totalAddition,
       totalPayroll,
+      paymentRecord: latestPayment
+        ? {
+            id: latestPayment.id,
+            amount: latestPayment.amount,
+            netAmount: latestPayment.netAmount,
+            paymentMethod: latestPayment.paymentMethod,
+            paymentDate: latestPayment.paymentDate,
+            status: latestPayment.status,
+          }
+        : null,
     };
   });
 
@@ -316,6 +333,8 @@ export async function getPayrollData() {
       image: '/dashboard/dollar.png',
     },
   ];
+
+  // console.log('Payroll Data ❌❌❌❌:', payrollData);
 
   return { payrollData, metrics };
 }

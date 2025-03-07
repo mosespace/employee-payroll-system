@@ -79,10 +79,10 @@ export const columns: ColumnDef<Payment>[] = [
   {
     header: 'Employee Status',
     columns: [
-      {
-        accessorKey: 'id',
-        header: 'ID',
-      },
+      // {
+      //   accessorKey: 'id',
+      //   header: 'ID',
+      // },
       {
         accessorKey: 'name',
         header: 'Name',
@@ -299,7 +299,7 @@ export function PayrollTable({ data }: { data: Payment[] }) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          placeholder="Search for name or ID"
+          placeholder="Search for name"
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('name')?.setFilterValue(event.target.value)
