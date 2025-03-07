@@ -1,12 +1,13 @@
 'use server';
 
-import { z } from 'zod';
-import { db } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
-import { getServerSession } from 'next-auth';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { db } from '@/lib/db';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { PaymentRecord } from '@prisma/client';
+import { endOfMonth, format, startOfMonth } from 'date-fns';
+import { getServerSession } from 'next-auth';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 
 // Define the schema for the payroll form validation
 const payrollFormSchema = z.object({
@@ -117,51 +118,76 @@ export async function createPayroll(formData: PayrollFormValues) {
 export async function getPayRollById(id: string) {
   // console.log('Id ✅:', id);
 
+  if (!id) {
+    return {
+      status: 404,
+      message: 'Please provide id',
+      data: null,
+    };
+  }
+
   try {
     // Get the authenticated user
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session) {
       return { status: 500, message: 'Unauthorized access. Please log in.' };
     }
 
     // Fetch the payment record
-    const paymentRecord = await db.paymentRecord.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        employee: true,
-      },
-    });
-
-    const activityLogs = await db.activityLog.findMany({
+    const paymentRecord = await db.paymentRecord.findUnique({
       where: {
-        details: {
-          path: ['employeeId'],
-          equals: paymentRecord[0]?.employeeId || '',
-        },
+        id,
       },
+
       include: {
-        user: {
-          select: {
-            name: true,
-            image: true,
-            position: true,
-            role: true,
+        createdBy: true,
+        employee: {
+          include: {
+            compensation: true,
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     });
 
-    return {
-      status: 200,
-      message: 'Payroll fetched back successfully',
-      data: { ...paymentRecord, activityLogs },
-    };
+    if (!paymentRecord) {
+      return {
+        status: 500,
+        message: 'Please try again later',
+        data: null,
+      };
+    }
+
+    // console.log('Payroll Record✅:', paymentRecord);
+    if (paymentRecord) {
+      const activityLogs = await db.activityLog.findMany({
+        where: {
+          details: {
+            path: ['employeeId'],
+            equals: paymentRecord?.employeeId || '',
+          },
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              image: true,
+              position: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return {
+        status: 200,
+        message: 'Payroll fetched back successfully',
+        data: { ...paymentRecord, activityLogs },
+      };
+    }
   } catch (error) {
     console.error('Error creating payroll:', error);
     return {
@@ -179,7 +205,7 @@ export async function getPayrollData() {
   // Fetch employees with their payment records
   const employees = await db.user.findMany({
     where: {
-      role: { in: ['EMPLOYEE', 'MANAGER'] },
+      role: { in: ['EMPLOYEE'] },
       employmentStatus: { in: ['ACTIVE', 'PROBATION'] },
     },
     include: {
@@ -208,7 +234,7 @@ export async function getPayrollData() {
       : employee.baseSalary || 0;
 
     // Get latest payment record if exists
-    const latestPayment = employee.paymentRecords[0];
+    const latestPayment = employee.paymentRecords[0] || null;
 
     // Calculate overtime from payment record
     const overtime = latestPayment
@@ -233,8 +259,10 @@ export async function getPayrollData() {
     // Calculate total payroll
     const totalPayroll = baseSalary + totalAddition;
 
+    console.log('Payment ❌', employee.paymentRecords);
+
     return {
-      id: employee.employeeId || employee.id,
+      id: employee.employeeId,
       name: employee.name,
       salary: baseSalary,
       overtime,

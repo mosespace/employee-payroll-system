@@ -1,6 +1,32 @@
 'use client';
 
-import * as React from 'react';
+import { processPayroll } from '@/actions/payroll';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { toast } from '@mosespace/toast';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -13,36 +39,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { CalendarIcon, Filter, Loader2 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
+import { CalendarIcon, Eye, Filter, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
-import { Calendar } from '@/components/ui/calendar';
-import { processPayroll } from '@/actions/payroll';
-import { toast } from '@mosespace/toast';
 
 export type Payment = {
   id: string;
@@ -51,7 +52,6 @@ export type Payment = {
   overtime: number;
   bonuses: number;
   expenses: number;
-  training: number;
   totalAddition: number;
   totalPayroll: number;
 };
@@ -99,7 +99,7 @@ export const columns: ColumnDef<Payment>[] = [
           const amount = Number.parseFloat(row.getValue('salary'));
           const formatted = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'UGX',
           }).format(amount);
           return formatted;
         },
@@ -111,7 +111,7 @@ export const columns: ColumnDef<Payment>[] = [
           const amount = Number.parseFloat(row.getValue('overtime'));
           const formatted = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'UGX',
           }).format(amount);
           return formatted;
         },
@@ -129,7 +129,7 @@ export const columns: ColumnDef<Payment>[] = [
           return amount
             ? new Intl.NumberFormat('en-US', {
                 style: 'currency',
-                currency: 'USD',
+                currency: 'UGX',
               }).format(amount)
             : '-';
         },
@@ -142,20 +142,7 @@ export const columns: ColumnDef<Payment>[] = [
           return amount
             ? new Intl.NumberFormat('en-US', {
                 style: 'currency',
-                currency: 'USD',
-              }).format(amount)
-            : '-';
-        },
-      },
-      {
-        accessorKey: 'training',
-        header: 'Training',
-        cell: ({ row }) => {
-          const amount = Number.parseFloat(row.getValue('training'));
-          return amount
-            ? new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
+                currency: 'UGX',
               }).format(amount)
             : '-';
         },
@@ -172,7 +159,7 @@ export const columns: ColumnDef<Payment>[] = [
           const amount = Number.parseFloat(row.getValue('totalAddition'));
           const formatted = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'UGX',
           }).format(amount);
           return formatted;
         },
@@ -189,12 +176,42 @@ export const columns: ColumnDef<Payment>[] = [
           const amount = Number.parseFloat(row.getValue('totalPayroll'));
           const formatted = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'UGX',
           }).format(amount);
           return formatted;
         },
       },
     ],
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => {
+      const payment = row.original;
+
+      // console.log('Payment: ', payment);
+
+      return (
+        <>
+          <div className="flex items-center">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/dashboard/payroll/${payment.id}/view`}>
+                <Eye className="size-4" />
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                (window.location.href = `/dashboard/payroll/${payment.id}`)
+              }
+            >
+              Edit
+            </Button>
+          </div>
+        </>
+      );
+    },
   },
 ];
 
@@ -206,7 +223,6 @@ export function PayrollTable({ data }: { data: Payment[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [editMode, setEditMode] = React.useState(false);
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: subDays(new Date(), 11),
     to: new Date(),
@@ -240,8 +256,8 @@ export function PayrollTable({ data }: { data: Payment[] }) {
     }
     if (
       cellId.includes('bonuses') ||
-      cellId.includes('expenses') ||
-      cellId.includes('training')
+      cellId.includes('expenses')
+      // || cellId.includes('training')
     ) {
       return 'bg-[#f3e5f5]/40';
     }
@@ -336,13 +352,7 @@ export function PayrollTable({ data }: { data: Payment[] }) {
             <SelectItem value="bonuses">Bonuses</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          variant={editMode ? 'default' : 'outline'}
-          className="ml-auto"
-          onClick={() => setEditMode(!editMode)}
-        >
-          Edit Mode
-        </Button>
+        <div className="ml-auto" />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -395,16 +405,9 @@ export function PayrollTable({ data }: { data: Payment[] }) {
                         row.getIsSelected() && 'bg-opacity-50',
                       )}
                     >
-                      {editMode && cell.column.id !== 'select' ? (
-                        <Input
-                          defaultValue={cell.getValue() as string}
-                          className="h-8 bg-white"
-                        />
-                      ) : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -470,7 +473,7 @@ export function PayrollTable({ data }: { data: Payment[] }) {
               <span className="font-medium">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'UGX',
                 }).format(
                   table
                     .getFilteredSelectedRowModel()

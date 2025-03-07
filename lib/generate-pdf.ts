@@ -8,9 +8,6 @@ export async function generatePDF(payroll: any) {
   // Add company logo or header
   doc.setFontSize(20);
   doc.text('Payroll Statement', 105, 15, { align: 'center' });
-  doc.text('Crafted by www.mosespace.com Statement', 105, 15, {
-    align: 'center',
-  });
 
   // Add payroll information
   doc.setFontSize(12);

@@ -11,19 +11,22 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CompensationDetails, PaymentRecord, User } from '@prisma/client';
 import { format } from 'date-fns';
-import { Building2, Calendar, DollarSign, User } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface PayrollDetailsProps {
-  payroll: any; // Replace with proper type
+  payroll: PaymentRecord & {
+    employee: User & { compensation: CompensationDetails };
+  } & { createdBy: User }; // Replace with proper type
 }
 
 export function PayrollDetails({ payroll }: PayrollDetailsProps) {
   const [activeTab, setActiveTab] = useState('overview');
-  const payrollData = payroll['0'];
+  // const payroll = payroll['0'];
 
-  // console.log('Payroll:', payrollData);
+  // console.log('Payroll:', payroll);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -38,30 +41,28 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount);
+    }).format(amount as number);
   };
 
-  console.log('PayrollData:', payrollData);
+  // console.log('PayrollData:', payroll);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle className="text-2xl">Payroll Details</CardTitle>
-            <CardDescription>
-              Payment reference: {payrollData.id}
-            </CardDescription>
+            <CardTitle className="text-2xl">Payment Details</CardTitle>
+            <CardDescription>Payment reference: {payroll.id}</CardDescription>
           </div>
           <Badge
             variant="secondary"
-            className={getStatusColor(payrollData?.status)}
+            className={getStatusColor(payroll?.status)}
           >
-            {payrollData?.status}
+            {payroll?.status}
           </Badge>
         </div>
       </CardHeader>
@@ -84,10 +85,10 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatCurrency(payrollData.amount)}
+                    {formatCurrency(payroll.amount)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {payrollData.paymentMethod?.replace('_', ' ')}
+                    {payroll.paymentMethod?.replace('_', ' ')}
                   </p>
                 </CardContent>
               </Card>
@@ -101,11 +102,11 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {format(new Date(payrollData.payPeriodStart), 'MMM yyyy')}
+                    {format(new Date(payroll.payPeriodStart), 'MMM yyyy')}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(payrollData.payPeriodStart), 'MMM d')} -{' '}
-                    {format(new Date(payrollData.payPeriodEnd), 'MMM d, yyyy')}
+                    {format(new Date(payroll.payPeriodStart), 'MMM d')} -{' '}
+                    {format(new Date(payroll.payPeriodEnd), 'MMM d, yyyy')}
                   </p>
                 </CardContent>
               </Card>
@@ -130,16 +131,16 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                   <CardTitle className="text-sm font-medium">
                     Employee
                   </CardTitle>
-                  <User className="h-4 w-4 text-muted-foreground" />
+                  <User2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src={payrollData.employee?.image || '/placeholder.scg'}
+                        src={payroll.employee?.image || '/placeholder.scg'}
                       />
                       <AvatarFallback>
-                        {payrollData.employee?.name
+                        {payroll.employee?.name
                           .split(' ')
                           .map((n: string) => n[0])
                           .join('')}
@@ -147,10 +148,10 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                     </Avatar>
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {payrollData.employee?.name}
+                        {payroll.employee?.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {payrollData.employee?.position}
+                        {payroll.employee?.position}
                       </p>
                     </div>
                   </div>
@@ -170,31 +171,39 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Base Salary</span>
                     <span className="font-medium">
-                      {formatCurrency(payrollData.netAmount)}
+                      {formatCurrency(payroll.netAmount)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Housing Allowance</span>
                     <span className="font-medium">
-                      {formatCurrency(payrollData.housingAllowance)}
+                      {formatCurrency(
+                        payroll.employee.compensation.housingAllowance,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Transport Allowance</span>
                     <span className="font-medium">
-                      {formatCurrency(payrollData.transportAllowance)}
+                      {formatCurrency(
+                        payroll.employee?.compensation?.transportAllowance,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Meal Allowance</span>
                     <span className="font-medium">
-                      {formatCurrency(payrollData.mealAllowances)}
+                      {formatCurrency(
+                        payroll.employee?.compensation?.mealAllowance,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Other Allowances</span>
                     <span className="font-medium">
-                      {formatCurrency(payrollData.otherAllowances)}
+                      {formatCurrency(
+                        payroll.employee?.compensation?.otherAllowances,
+                      )}
                     </span>
                   </div>
                 </div>
@@ -211,25 +220,34 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Tax</span>
                     <span className="font-medium text-red-600">
-                      -{formatCurrency(payrollData.taxDeductions)}
+                      -{formatCurrency(payroll.taxDeductions)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Insurance</span>
                     <span className="font-medium text-red-600">
-                      -{formatCurrency(payrollData.insuranceDeductions)}
+                      -
+                      {formatCurrency(
+                        payroll.employee?.compensation?.insuranceDeduction,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Pension</span>
                     <span className="font-medium text-red-600">
-                      -{formatCurrency(payrollData.pensionDeductions)}
+                      -
+                      {formatCurrency(
+                        payroll.employee?.compensation?.pensionDeduction,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Other Deductions</span>
                     <span className="font-medium text-red-600">
-                      -{formatCurrency(payrollData.otherDeductions.other)}
+                      -
+                      {formatCurrency(
+                        payroll.employee?.compensation?.otherDeduction,
+                      )}
                     </span>
                   </div>
                 </div>
@@ -241,7 +259,7 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
               <div className="flex justify-between items-center pt-2">
                 <span className="font-medium">Net Pay</span>
                 <span className="text-2xl font-bold">
-                  {formatCurrency(payrollData.amount)}
+                  {formatCurrency(payroll.amount)}
                 </span>
               </div>
             </div>
@@ -260,7 +278,7 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                         Method
                       </span>
                       <span className="text-sm font-medium">
-                        {payrollData.paymentMethod.replace('_', ' ')}
+                        {payroll.paymentMethod.replace('_', ' ')}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -268,7 +286,7 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                         Reference
                       </span>
                       <span className="text-sm font-medium">
-                        {payrollData.reference}
+                        {payroll.reference}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -276,7 +294,7 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                         Date
                       </span>
                       <span className="text-sm font-medium">
-                        {format(new Date(payrollData.createdAt), 'PPP')}
+                        {format(new Date(payroll.createdAt), 'PPP')}
                       </span>
                     </div>
                   </div>
@@ -290,7 +308,7 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
                         <AvatarFallback>
-                          {payrollData.createdById
+                          {payroll.createdBy.name
                             .split(' ')
                             .map((n: string) => n[0])
                             .join('')}
@@ -298,10 +316,10 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">
-                          {/* {payrollData.createdBy.name} */}
+                          {payroll.createdBy.name}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {/* {payrollData.createdBy.role} */}
+                          {payroll.createdBy.role}
                         </p>
                       </div>
                     </div>
@@ -309,8 +327,8 @@ export function PayrollDetails({ payroll }: PayrollDetailsProps) {
                       <span className="text-sm text-muted-foreground">
                         Created At
                       </span>
-                      <span className="text-sm font-medium">
-                        {format(new Date(payrollData.createdAt), 'PPP p')}
+                      <span className="text-xs font-medium">
+                        {format(new Date(payroll.createdAt), 'PPP p')}
                       </span>
                     </div>
                   </div>

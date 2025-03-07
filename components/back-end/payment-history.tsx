@@ -1,6 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import {
+  downloadPaymentStatement,
+  getPaymentHistory,
+} from '@/actions/payments';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -23,15 +29,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Download, Search, Loader2 } from 'lucide-react';
-import {
-  getPaymentHistory,
-  downloadPaymentStatement,
-} from '@/actions/payments';
 import { toast } from '@mosespace/toast';
+import { Download, Eye, Loader2, Search } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface PaymentHistoryProps {
   userId: string;
@@ -78,6 +78,8 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
         year: selectedYear,
       });
 
+      // console.log('Response ✅:', response);
+
       if (response.success) {
         setPayments(response.data as any);
         setPagination(response.pagination as any);
@@ -88,7 +90,7 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
         );
       }
     } catch (error) {
-      toast.error('Error', 'An unexpected error occurred');
+      console.log('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -121,14 +123,16 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-emerald-700 dark:bg-emerald-900';
       case 'paid':
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300';
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900';
       case 'failed':
-        return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+        return 'bg-red-100 text-red-700 dark:bg-red-900';
       default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800';
     }
   };
 
@@ -203,10 +207,11 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Reference</TableHead>
+                  <TableHead>Payment Method</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,18 +234,21 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
                   payments.map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell>
-                        {new Date(payment.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        {new Date(payment.createdAt).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          },
+                        )}
                       </TableCell>
                       <TableCell className="font-medium">
-                        {payment.reference}
+                        {payment.paymentMethod}
                       </TableCell>
                       <TableCell>{payment.type}</TableCell>
                       <TableCell className="font-medium">
-                        ${payment.amount.toLocaleString()}
+                        UGX {payment.amount.toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -249,6 +257,17 @@ export function PaymentHistory({ userId }: PaymentHistoryProps) {
                         >
                           {payment.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            (window.location.href = `/dashboard/payments/${payment.id}`)
+                          }
+                        >
+                          <Eye className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

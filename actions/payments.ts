@@ -124,22 +124,22 @@ export async function getPaymentHistory({
     };
 
     // Add createdAt filters
-    if (year && year !== 'all') {
-      const yearStart = new Date(Number.parseInt(year), 0, 1);
-      const yearEnd = new Date(Number.parseInt(year) + 1, 0, 1);
-      where.createdAt = {
-        gte: yearStart,
-        lt: yearEnd,
-      };
+    // if (year && year !== 'all') {
+    //   const yearStart = new Date(Number.parseInt(year), 0, 1);
+    //   const yearEnd = new Date(Number.parseInt(year) + 1, 0, 1);
+    //   where.createdAt = {
+    //     gte: yearStart,
+    //     lt: yearEnd,
+    //   };
 
-      if (month && month !== 'all') {
-        const monthNum = Number.parseInt(month) - 1;
-        where.createdAt = {
-          gte: new Date(Number.parseInt(year), monthNum, 1),
-          lt: new Date(Number.parseInt(year), monthNum + 1, 1),
-        };
-      }
-    }
+    //   if (month && month !== 'all') {
+    //     const monthNum = Number.parseInt(month) - 1;
+    //     where.createdAt = {
+    //       gte: new Date(Number.parseInt(year), monthNum, 1),
+    //       lt: new Date(Number.parseInt(year), monthNum + 1, 1),
+    //     };
+    //   }
+    // }
 
     // Add search filter
     if (searchQuery) {

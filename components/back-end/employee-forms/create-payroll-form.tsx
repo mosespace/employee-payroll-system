@@ -86,8 +86,10 @@ const sections = [
 
 export default function CreatePayrollForm({
   employees,
+  payroll,
 }: {
   employees: User[];
+  payroll?: any;
 }) {
   const [netAmount, setNetAmount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -105,6 +107,8 @@ export default function CreatePayrollForm({
     };
   });
 
+  // console.log('Payroll ✅:', payroll);
+
   const {
     register,
     handleSubmit,
@@ -115,22 +119,23 @@ export default function CreatePayrollForm({
     formState: { errors },
   } = useForm<any>({
     defaultValues: {
-      employeeId: '',
-      paymentMethod: 'BANK_TRANSFER',
-      status: 'PENDING',
-      paymentDate: new Date(),
-      payPeriodStart: new Date(),
-      payPeriodEnd: new Date(),
-      baseSalary: 0,
-      housingAllowance: 0,
-      transportAllowance: 0,
-      mealAllowance: 0,
-      otherAllowances: 0,
-      taxDeductions: 0,
-      insuranceDeduction: 0,
-      pensionDeduction: 0,
-      otherDeductions: 0,
-      description: '',
+      ...payroll,
+      // employeeId: '',
+      // paymentMethod: 'BANK_TRANSFER',
+      // status: 'PENDING',
+      // paymentDate: new Date(),
+      // payPeriodStart: new Date(),
+      // payPeriodEnd: new Date(),
+      // baseSalary: 0,
+      // housingAllowance: 0,
+      // transportAllowance: 0,
+      // mealAllowance: 0,
+      // otherAllowances: 0,
+      // taxDeductions: 0,
+      // insuranceDeduction: 0,
+      // pensionDeduction: 0,
+      // otherDeductions: 0,
+      // description: '',
     },
   });
 
@@ -207,6 +212,37 @@ export default function CreatePayrollForm({
     }
   }
 
+  // Initialize selections based on project when component mounts
+  useEffect(() => {
+    if (payroll) {
+      if (payroll.status) {
+        const matchedType = paymentStatuses.find(
+          (opt) => opt.value === payroll.status,
+        );
+        if (matchedType) {
+          setPaymentStatus(matchedType);
+        }
+      }
+
+      if (payroll.employeeId) {
+        const matchedType = options.find(
+          (opt) => opt.value === payroll.employeeId,
+        );
+        if (matchedType) {
+          setEmployee(matchedType);
+        }
+      }
+      if (payroll.paymentMethod) {
+        const matchedType = paymentMethods.find(
+          (opt) => opt.value === payroll.paymentMethod,
+        );
+        if (matchedType) {
+          setPaymentMethod(matchedType);
+        }
+      }
+    }
+  }, [payroll]);
+
   return (
     <div className="container mx-auto py-10">
       <Card className="max-w-5xl mx-auto">
@@ -214,10 +250,11 @@ export default function CreatePayrollForm({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold">
-                Create Payroll
+                {payroll ? 'Update' : 'Create'} Payroll
               </CardTitle>
               <CardDescription>
-                Create a new payment record for an employee
+                {payroll ? 'Update' : 'Create a new'} payment record for an
+                employee
               </CardDescription>
             </div>
             <div className="text-right">
