@@ -114,7 +114,6 @@ export async function createPayroll(formData: PayrollFormValues) {
     };
   }
 }
-
 export async function getPayRollById({
   id,
   employeeId,
@@ -204,7 +203,6 @@ export async function getPayRollById({
     };
   }
 }
-
 export async function getPayrollData() {
   // Get current month's date range
   const currentDate = new Date();
@@ -338,7 +336,6 @@ export async function getPayrollData() {
 
   return { payrollData, metrics };
 }
-
 export async function processPayroll(employeeIds: string[]) {
   const currentDate = new Date();
   const startDate = startOfMonth(currentDate);
@@ -377,4 +374,85 @@ export async function processPayroll(employeeIds: string[]) {
   );
 
   return results.filter(Boolean);
+}
+
+export async function updatePayroll(id: string, formData: PayrollFormValues) {
+  // console.log('FormData ✅:', formData);
+  try {
+    // Get the authenticated user
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return { status: 500, message: 'Unauthorized access. Please log in.' };
+    }
+
+    // Calculate the total earnings
+    const totalEarnings =
+      formData.baseSalary +
+      formData.housingAllowance +
+      formData.transportAllowance +
+      formData.mealAllowance +
+      formData.otherAllowances;
+
+    // Calculate the total deductions
+    const totalDeductions =
+      formData.taxDeductions +
+      formData.insuranceDeduction +
+      formData.pensionDeduction +
+      formData.otherDeductions;
+
+    // Calculate the net amount
+    const netAmount = totalEarnings - totalDeductions;
+
+    // Create the payment record
+    const paymentRecord = await db.paymentRecord.update({
+      where: {
+        id,
+      },
+      data: {
+        employeeId: formData.employeeId,
+        amount: totalEarnings,
+        paymentMethod: formData.paymentMethod as any,
+        paymentDate: formData.paymentDate,
+        payPeriodStart: formData.payPeriodStart,
+        payPeriodEnd: formData.payPeriodEnd,
+        description: formData.description || '',
+        transactionId: formData.transactionId,
+        status: formData.status,
+        taxDeductions: formData.taxDeductions,
+        otherDeductions: totalDeductions - formData.taxDeductions, // Combined other deductions
+        netAmount: netAmount,
+        createdById: session.user.id,
+      },
+    });
+
+    // Create an activity log entry
+    await db.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'updated',
+        description: 'Made update on this payment',
+        details: {
+          paymentId: paymentRecord.id,
+          employeeId: formData.employeeId,
+          amount: netAmount,
+        },
+      },
+    });
+
+    // Revalidate the payroll list page
+    revalidatePath('/dashboard/payroll');
+
+    return {
+      status: 200,
+      message: 'Payroll updated successfully',
+      data: paymentRecord,
+    };
+  } catch (error) {
+    console.error('Error updating payroll:', error);
+    return {
+      message: 'Failed to update payroll. Please try again.',
+      // details: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 }

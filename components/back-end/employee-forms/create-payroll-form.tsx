@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-import { createPayroll } from '@/actions/payroll';
+import { createPayroll, updatePayroll } from '@/actions/payroll';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -120,22 +120,21 @@ export default function CreatePayrollForm({
   } = useForm<any>({
     defaultValues: {
       ...payroll,
+      baseSalary: payroll?.amount || 0,
+      housingAllowance: payroll.housingAllowance || 0,
       // employeeId: '',
       // paymentMethod: 'BANK_TRANSFER',
       // status: 'PENDING',
       // paymentDate: new Date(),
       // payPeriodStart: new Date(),
       // payPeriodEnd: new Date(),
-      // baseSalary: 0,
-      // housingAllowance: 0,
-      // transportAllowance: 0,
-      // mealAllowance: 0,
-      // otherAllowances: 0,
-      // taxDeductions: 0,
-      // insuranceDeduction: 0,
-      // pensionDeduction: 0,
-      // otherDeductions: 0,
-      // description: '',
+      transportAllowance: 0,
+      mealAllowance: 0,
+      otherAllowances: 0,
+      taxDeductions: 0,
+      insuranceDeduction: 0,
+      pensionDeduction: 0,
+      otherDeductions: 0,
     },
   });
 
@@ -193,14 +192,25 @@ export default function CreatePayrollForm({
         paymentStatus: paymentStatus?.value,
         otherAllowance: parseFloat(formData.otherAllowance),
       };
+      const employeeId = payroll.id;
+      if (payroll) {
+        const result = await updatePayroll(employeeId, dataToSubmit as any);
 
-      const result = await createPayroll(dataToSubmit as any);
-
-      if (result.status === 200) {
-        toast.success('Payroll Created', `${result.message}`);
-        router.push(`/dashboard/payroll/${result?.data?.id}`);
+        if (result.status === 200) {
+          toast.success('Payroll Created', `${result.message}`);
+          router.push(`/dashboard/payroll/${result?.data?.id}`);
+        } else {
+          toast.error('Payroll Creation Error', `${result.message}`);
+        }
       } else {
-        toast.error('Payroll Creation Error', `${result.message}`);
+        const result = await createPayroll(dataToSubmit as any);
+
+        if (result.status === 200) {
+          toast.success('Payroll Created', `${result.message}`);
+          router.push(`/dashboard/payroll/${result?.data?.id}`);
+        } else {
+          toast.error('Payroll Creation Error', `${result.message}`);
+        }
       }
     } catch (error) {
       toast.error(
@@ -223,7 +233,6 @@ export default function CreatePayrollForm({
           setPaymentStatus(matchedType);
         }
       }
-
       if (payroll.employeeId) {
         const matchedType = options.find(
           (opt) => opt.value === payroll.employeeId,
@@ -239,6 +248,16 @@ export default function CreatePayrollForm({
         if (matchedType) {
           setPaymentMethod(matchedType);
         }
+      }
+      // Set date values properly
+      if (payroll.paymentDate) {
+        setValue('paymentDate', new Date(payroll.paymentDate));
+      }
+      if (payroll.payPeriodStart) {
+        setValue('payPeriod', new Date(payroll.payPeriodStart));
+      }
+      if (payroll.payPeriodEnd) {
+        setValue('payPeriodEnd', new Date(payroll.payPeriodEnd));
       }
     }
   }, [payroll]);
@@ -797,10 +816,10 @@ export default function CreatePayrollForm({
                         {loading ? (
                           <span className="flex items-center gap-2">
                             <Loader className="animate-spin size-4" />
-                            Creating...
+                            {payroll ? 'Updating...' : 'Update'}
                           </span>
                         ) : (
-                          <span> Create Payroll</span>
+                          <span> {payroll ? 'Update' : 'Create'} Payroll</span>
                         )}
                       </Button>
                     </div>
