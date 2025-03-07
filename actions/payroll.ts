@@ -259,7 +259,7 @@ export async function getPayrollData() {
     // Calculate total payroll
     const totalPayroll = baseSalary + totalAddition;
 
-    console.log('Payment ❌', employee.paymentRecords);
+    // console.log('Payment ❌', employee.paymentRecords);
 
     return {
       id: employee.employeeId,
