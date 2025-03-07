@@ -41,7 +41,7 @@ export function AccountTab() {
           <Label htmlFor="username">Username</Label>
           <div className="flex">
             <div className="flex h-10 items-center rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
-              slothui.com/
+              epms.com
             </div>
             <Input
               id="username"
