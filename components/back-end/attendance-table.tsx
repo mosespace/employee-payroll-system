@@ -36,9 +36,11 @@ interface AttendanceRecord {
 
 interface AttendanceTableProps {
   initialDate?: Date;
+  user: any;
 }
 
 export function AttendanceTable({
+  user,
   initialDate = new Date(),
 }: AttendanceTableProps) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -110,16 +112,18 @@ export function AttendanceTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <form onSubmit={handleSearch} className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by name..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </form>
+        {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+          <form onSubmit={handleSearch} className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by name..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+        )}
 
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />

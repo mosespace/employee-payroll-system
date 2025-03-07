@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Clock, LogIn, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Progress } from '../ui/progress';
+import { createActivityLog } from '@/actions/logs';
 
 interface ClockCardProps {
   userId: string;
@@ -96,6 +97,17 @@ export function ClockCard({ userId }: ClockCardProps) {
       const response = await clockIn(userId);
       if (response.success) {
         toast.success('Clocked In', 'You have successfully clocked in.');
+
+        const data = {
+          userId: '',
+          action: 'check in',
+          description: 'Checked Into the system',
+          details: {
+            status: 'Successfully',
+          },
+        };
+        // create log
+        await createActivityLog(data);
         await fetchAttendanceStatus();
       } else {
         toast.error('Error', `${response.message}` || 'Failed to clock in');
